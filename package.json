@@ -1,0 +1,22 @@
+{
+  "name": "japan-2026",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "dev:full": "npm run build && wrangler pages dev",
+    "db:local": "wrangler d1 execute japan-2026 --local --file=schema.sql",
+    "test": "node src/lib/bookings.test.mjs && node src/lib/sync.test.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^7.1.0",
+    "wrangler": "^4.0.0"
+  }
+}

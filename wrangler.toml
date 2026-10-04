@@ -1,0 +1,9 @@
+name = "japan-2026"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "japan-2026"
+# database_id is filled in by the setup wizard after `wrangler d1 create`
+database_id = "fb54895f-b27d-4719-9bde-31154ad9f95d"

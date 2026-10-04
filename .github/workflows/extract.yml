@@ -1,0 +1,88 @@
+name: extract bookings
+
+on:
+  schedule:
+    - cron: '0 6 * * *'        # daily 06:00 UTC — 15:00 in Japan
+  workflow_dispatch:
+
+concurrency:
+  group: extract
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          # to commit data/bookings.json
+      issues: write            # to report a failure instead of failing silently
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Restore classification cache
+        uses: actions/cache@v4
+        with:
+          path: .japan_mail_cache.db
+          key: jevcache-${{ github.run_id }}
+          restore-keys: jevcache-
+
+      - name: Run extractor
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: uv run japan_mail.py --json data/bookings.json
+
+      - name: Commit any change
+        id: commit
+        run: |
+          git config user.name  "japan-bot"
+          git config user.email "actions@github.com"
+          if git diff --quiet -- data/bookings.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "no booking changes"
+          else
+            git add data/bookings.json
+            git commit -m "bookings: refresh from mail"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A GITHUB_TOKEN push does not trigger deploy.yml (GitHub blocks that to avoid
+      # workflow loops), so redeploy here rather than wiring up a PAT.
+      - name: Build and deploy if bookings changed
+        if: steps.commit.outputs.changed == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.commit.outputs.changed == 'true'
+        run: npm ci && npm run build
+      - if: steps.commit.outputs.changed == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=japan-2026 --branch=main
+
+      - name: Open an issue if this failed
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = 'Booking extraction failed'
+            const { data: open } = await github.rest.issues.listForRepo({
+              ...context.repo, state: 'open', labels: 'extract-failure',
+            })
+            const body = `Run ${context.runId} failed.\n\n`
+              + `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            if (open.length) {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: open[0].number, body,
+              })
+            } else {
+              await github.rest.issues.create({
+                ...context.repo, title, body, labels: ['extract-failure'],
+              })
+            }

@@ -1,0 +1,10 @@
+.env
+.japan_mail_cache.db
+node_modules/
+dist/
+run.log
+.wrangler/
+.DS_Store
+__pycache__/
+*.pyc
+extract.log
