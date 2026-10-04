@@ -59,7 +59,15 @@ fi
 
 echo
 echo "  Copy the ${B}database_id${N} from the output above."
-DB_ID=$(ask "Paste the database_id:")
+DB_ID=$(ask "Paste the database_id (the UUID, not the name):")
+# Pasting the name here produces "Invalid database UUID" at deploy time, long after
+# the mistake — so reject it now and look it up instead.
+until [ -z "$DB_ID" ] || printf '%s' "$DB_ID" | grep -qE '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; do
+  warn "that is not a UUID"
+  FOUND=$(npx --yes wrangler d1 list 2>/dev/null | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
+  [ -n "$FOUND" ] && { echo "  found: ${B}$FOUND${N}"; DB_ID=$FOUND; break; }
+  DB_ID=$(ask "Paste the database_id (UUID):")
+done
 if [ -n "$DB_ID" ]; then
   if command -v python3 >/dev/null; then
     python3 - "$DB_ID" <<'PY'
