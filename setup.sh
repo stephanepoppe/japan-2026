@@ -150,15 +150,19 @@ else
 fi
 
 # ---------------------------------------------------------------- access
-step "7/7  Cloudflare Access (so only you two can open it)"
-echo "  The app will contain booking PINs and the addresses you're sleeping at."
-echo "  Lock it down before the URL exists anywhere:"
-echo "    1. one.dash.cloudflare.com → Access → Applications → Add an application"
-echo "    2. Type ${B}Self-hosted${N}, domain ${B}$PROJECT.pages.dev${N}"
-echo "    3. Session duration: ${B}1 month${N}  ${D}(so it won't log you out mid-trip)${N}"
-echo "    4. Policy → Action ${B}Allow${N} → Include → ${B}Emails${N} → both addresses"
-echo "    5. Save"
-pause
+step "7/7  Passphrase (Cloudflare Access can't cover a pages.dev URL)"
+echo "  Access needs a domain you own on Cloudflare; ${B}japan-2026.pages.dev${N} is not one."
+echo "  So the site is gated by one shared passphrase instead. Pick something you can"
+echo "  type on a phone and tell the other person."
+PASS=$(ask "Passphrase to protect the site:")
+if [ -n "$PASS" ]; then
+  printf '%s' "$PASS" | npx --yes wrangler pages secret put TRIP_PASSPHRASE --project-name="$PROJECT" \
+    && ok "TRIP_PASSPHRASE set on $PROJECT" || warn "failed — set it in the dashboard under Settings → Variables"
+  printf 'TRIP_PASSPHRASE=%s\n' "$PASS" > .dev.vars
+  ok ".dev.vars written for local dev"
+else
+  warn "skipped — without it the site is open to anyone with the URL"
+fi
 
 echo
 echo "${B}Done.${N} Next:"

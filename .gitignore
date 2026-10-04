@@ -8,3 +8,4 @@ run.log
 __pycache__/
 *.pyc
 extract.log
+.dev.vars
