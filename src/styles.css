@@ -1,30 +1,56 @@
+@import "tailwindcss";
+
+/* One source of truth: legacy views read --bg/--fg/…, Tailwind reads them via @theme. */
 :root {
-  --bg: #1c1917; --card: #292524; --line: #44403c;
-  --fg: #fafaf9; --dim: #a8a29e; --accent: #fb7185; --accent-dim: #881337;
-  --pad: 1rem; --r: 14px;
-  color-scheme: dark;
+  --bg: #f6f6f2; --card: #ffffff; --line: #deded8;
+  --fg: #1b1e26; --dim: #6a6f7c;
+  --accent: #2443c4; --accent-dim: #e4e8f8; --on-accent: #ffffff;
+  --pad: 1.5rem; --r: 10px;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    --bg: #faf9f7; --card: #fff; --line: #e7e5e4;
-    --fg: #1c1917; --dim: #78716c; --accent: #e11d48; --accent-dim: #fecdd3;
-    color-scheme: light;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #15171d; --card: #1d2028; --line: #2d313b;
+    --fg: #ecedf0; --dim: #959aa6;
+    --accent: #93a6ff; --accent-dim: #232a4a; --on-accent: #10142a;
+    color-scheme: dark;
   }
 }
-* { box-sizing: border-box; }
-body {
-  margin: 0; background: var(--bg); color: var(--fg);
-  font: 16px/1.5 ui-sans-serif, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
-  -webkit-text-size-adjust: 100%;
+:root[data-theme='dark'] {
+  --bg: #15171d; --card: #1d2028; --line: #2d313b;
+  --fg: #ecedf0; --dim: #959aa6;
+  --accent: #93a6ff; --accent-dim: #232a4a; --on-accent: #10142a;
+  color-scheme: dark;
 }
-main {
-  padding: var(--pad);
-  padding-top: max(var(--pad), env(safe-area-inset-top));
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
-  max-width: 34rem; margin: 0 auto;
+
+@theme inline {
+  --color-paper: var(--bg);
+  --color-raised: var(--card);
+  --color-rule: var(--line);
+  --color-ink: var(--fg);
+  --color-dim: var(--dim);
+  --color-ai: var(--accent);
+  --color-ai-wash: var(--accent-dim);
+  --color-on-ai: var(--on-accent);
+  --font-sans: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", ui-sans-serif, sans-serif;
+  --font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    font-size: 16px; line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+}
+
+/* ponytail: pre-redesign styles for Calendar/Yen/Say/Links, delete as each page moves to utilities */
+@layer components {
 h1 { font-size: 1.45rem; margin: 0; letter-spacing: -0.02em; }
 h2, h3 { margin: 0; font-size: 1rem; }
+* { box-sizing: border-box; }
 p { margin: 0; }
 .muted { color: var(--dim); }
 .small { font-size: 0.82rem; }
@@ -104,22 +130,9 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 .addrow { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 .addrow .btn { flex: 0 0 auto; }
 
-.tabbar {
-  position: fixed; inset: auto 0 0 0; display: grid; grid-template-columns: repeat(5, 1fr);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(12px); border-top: 1px solid var(--line);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-.tabbar a {
-  display: grid; gap: 0.1rem; justify-items: center; padding: 0.55rem 0 0.5rem;
-  color: var(--dim); text-decoration: none; font-size: 0.7rem;
-}
-.tabbar a.on { color: var(--accent); }
-.tabicon { font-size: 1.15rem; line-height: 1; }
-
 /* ---- calendar ---- */
 .monthhead { font-size: 1.2rem; }
-.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 .gh { text-align: center; font-size: 0.7rem; color: var(--dim); padding-bottom: 0.2rem; }
 .gd {
   position: relative; aspect-ratio: 1; display: grid; place-items: center; gap: 2px;
@@ -196,3 +209,4 @@ input[type=number]::-webkit-inner-spin-button { display: none; }
 .arrival .kind { font-size: 1.3rem; line-height: 1.2; }
 .copy.wide { width: 100%; align-items: flex-start; }
 .copy.wide code { white-space: normal; word-break: break-word; line-height: 1.35; }
+}

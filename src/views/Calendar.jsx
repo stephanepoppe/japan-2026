@@ -36,7 +36,7 @@ export default function Calendar() {
       <h1 className="monthhead">October 2026</h1>
       <SyncBanner />
 
-      <div className="grid" role="grid">
+      <div className="calgrid" role="grid">
         {WEEKDAYS.map((w, i) => <div key={i} className="gh">{w}</div>)}
         {Array.from({ length: FIRST_WEEKDAY }, (_, i) => <div key={`p${i}`} />)}
         {Array.from({ length: DAYS_IN }, (_, i) => {

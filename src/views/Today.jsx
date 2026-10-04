@@ -26,36 +26,40 @@ export default function Today() {
   const entries = dayEntries(day, items)
   const stays = staysOn(day)
 
+  const [weekday, ...date] = pretty(day).split(' ')
+
   return (
-    <div className="stack">
+    <div className="grid gap-12">
       <SyncBanner />
-      <header className="dayhead">
-        <h1>{pretty(day)}</h1>
-        {until > 0 && <p className="countdown">{until} day{until === 1 ? '' : 's'} to go</p>}
-        {now > last && <p className="muted small">Trip finished — showing the last day.</p>}
+      <header>
+        <p className="font-mincho text-lg text-dim">{weekday}</p>
+        <h1 className="font-mincho text-5xl leading-[1.1] font-medium tracking-tight">{date.join(' ')}</h1>
+        {until > 0 && <p className="mt-3 text-ai">{until} day{until === 1 ? '' : 's'} to go</p>}
+        {now > last && <p className="mt-3 text-sm text-dim">The trip is over. This is the last day.</p>}
       </header>
 
       <ArrivalCard today={now} />
 
       <WeatherStrip w={weatherFor(day)} />
 
-      <div className="stack-tight">
+      <section className="grid gap-2">
+        <h2 className="font-mincho text-xl font-medium">The day</h2>
         {stays.map(({ b, night, nights }) => (
-          <div className="stayline" key={b.confirmation ?? b.name}>
-            🛏 {b.name} · night {night} of {nights}
-          </div>
+          <p className="text-sm text-dim" key={b.confirmation ?? b.name}>
+            Night {night} of {nights} at {b.name}
+          </p>
         ))}
 
-        {entries.map((e, i) =>
-          e.type === 'booking'
-            ? <BookingCard key={`b${i}`} b={{ ...e.b, role: e.role }} />
-            : <ItemRow key={e.item.id} item={e.item} onUpdate={update} onRemove={remove} />
-        )}
-
-        {!entries.length && !stays.length && <p className="muted">Nothing booked for this day.</p>}
-
-        <AddItem day={day} onAdd={add} />
-      </div>
+        <div className="mt-4 divide-y divide-rule border-y border-rule">
+          {entries.map((e, i) =>
+            e.type === 'booking'
+              ? <BookingCard key={`b${i}`} b={{ ...e.b, role: e.role }} />
+              : <ItemRow key={e.item.id} item={e.item} onUpdate={update} onRemove={remove} />
+          )}
+          {!entries.length && !stays.length && <p className="py-6 text-dim">Nothing booked for this day yet.</p>}
+          <AddItem day={day} onAdd={add} />
+        </div>
+      </section>
     </div>
   )
 }

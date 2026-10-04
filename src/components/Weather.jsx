@@ -6,15 +6,15 @@ export function WeatherStrip({ w }) {
   const { icon, label } = describe(w.code)
   const advice = whatToWear(w)
   return (
-    <div className="wstrip">
-      <div className="wline">
-        <span className="wicon">{icon}</span>
-        <span className="wtemp">{Math.round(w.tmin)}–{Math.round(w.tmax)}°</span>
-        <span className="muted">{w.city} · {label}</span>
-        {w.rain > 0 && <span className="muted">· {w.rain}%</span>}
+    <section className="grid grid-cols-[auto_1fr] items-baseline gap-x-5">
+      <p className="font-mincho text-4xl font-medium tabular-nums">
+        {Math.round(w.tmin)}–{Math.round(w.tmax)}°
+      </p>
+      <div>
+        <p>{icon} {w.city}, {label.toLowerCase()}{w.rain > 0 && `, ${w.rain}% chance of rain`}</p>
+        {advice && <p className="text-sm text-dim">{advice}</p>}
       </div>
-      {advice && <p className="wadvice">{advice}</p>}
-    </div>
+    </section>
   )
 }
 

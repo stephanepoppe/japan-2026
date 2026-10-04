@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -17,6 +18,6 @@ const precache = () => ({
 })
 
 export default defineConfig({
-  plugins: [react(), precache()],
+  plugins: [react(), tailwindcss(), precache()],
   build: { outDir: 'dist' },
 })

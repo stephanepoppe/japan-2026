@@ -26,13 +26,13 @@ function arrivalFacts() {
   }
 }
 
-function Copy({ label, value, wide }) {
+function Copy({ label, value }) {
   if (!value) return null
   return (
-    <button className={`copy ${wide ? 'wide' : ''}`}
+    <button className="grid w-full cursor-pointer grid-cols-[7.5rem_1fr] gap-x-4 py-3 text-left active:text-ai"
             onClick={() => navigator.clipboard?.writeText(value)} title="Tap to copy">
-      <span className="muted small">{label}</span>
-      <code>{value}</code>
+      <span className="text-sm text-dim">{label}</span>
+      <span className="font-medium break-words">{value}</span>
     </button>
   )
 }
@@ -51,48 +51,37 @@ export default function ArrivalCard({ today }) {
   const check = (f.stay.notes ?? '').match(/check[- ]?in[:\s]*(\d{1,2}:\d{2})/i)?.[1]
 
   return (
-    <section className="card arrival">
-      <header>
-        <span className="kind">🛂</span>
-        <div>
-          <h2>{departed ? 'Arriving in Japan' : 'Before you fly'}</h2>
-          <p className="muted small">
-            {departed
-              ? `Lands ${f.arriveTime ? `${f.arriveTime} ` : ''}at Narita`
-              : 'Register on Visit Japan Web — these are the values it asks for'}
-          </p>
-        </div>
-      </header>
+    <section className="-mx-6 grid gap-5 bg-ai-wash px-6 py-8 sm:mx-0 sm:rounded-lg">
+      <div>
+        <h2 className="font-mincho text-2xl font-medium">{departed ? 'Arriving in Japan' : 'Before you fly'}</h2>
+        <p className="mt-1 text-dim">
+          {departed
+            ? `Lands ${f.arriveTime ? `${f.arriveTime} ` : ''}at Narita`
+            : 'Register on Visit Japan Web. Tap a line to copy what it asks for.'}
+        </p>
+      </div>
 
-      <div className="meta">
+      <div className="divide-y divide-ai/15 border-y border-ai/15">
         <Copy label="Flight into Japan" value={f.inbound} />
         <Copy label="Booking ref" value={f.flight.confirmation} />
+        <Copy label="Staying at" value={f.stay.name} />
         <Copy label="Postcode" value={f.stay.postcode} />
+        <Copy label="Address" value={f.stay.address_ja} />
+        <Copy label="Romanized" value={f.stay.address} />
       </div>
 
-      <div className="meta">
-        <Copy label="Staying at" value={f.stay.name} wide />
-      </div>
-      <div className="meta">
-        <Copy label="Address (Japanese)" value={f.stay.address_ja} wide />
-      </div>
-      <div className="meta">
-        <Copy label="Address (romanized)" value={f.stay.address} wide />
-      </div>
-
-      <p className="muted small">
-        Stay: {DAY(f.flight.start)} → {f.lastDay}
-        {f.arriveTime && check && ` · lands ${f.arriveTime}, check-in ${check}`}
-      </p>
-
-      <p className="muted small">
-        VJW also wants a contact number in Japan — use your roaming number, or ask the
+      <p className="text-sm leading-relaxed text-dim">
+        In Japan from {DAY(f.flight.start)} to {f.lastDay}.
+        {f.arriveTime && check && ` Lands ${f.arriveTime}, check-in from ${check}.`}
+        {' '}VJW also wants a contact number in Japan: use your roaming number, or ask the
         host through Airbnb.
       </p>
 
-      <div className="actions">
-        <a className="btn" href={VJW} target="_blank" rel="noreferrer">Visit Japan Web</a>
-        <a className="btn ghost" href={KLM_STATUS} target="_blank" rel="noreferrer">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <a className="rounded-md bg-ai px-5 py-3 font-medium text-on-ai" href={VJW} target="_blank" rel="noreferrer">
+          Open Visit Japan Web
+        </a>
+        <a className="font-medium text-ai underline-offset-4 hover:underline" href={KLM_STATUS} target="_blank" rel="noreferrer">
           Flight status
         </a>
       </div>

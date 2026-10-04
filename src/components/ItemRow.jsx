@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ItemForm } from './AddItem'
 
 const mapsUrl = q => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`
 
@@ -8,17 +9,22 @@ export default function ItemRow({ item, onUpdate, onRemove }) {
 
   if (!editing) {
     return (
-      <article className="card entry mine">
-        <span className="when">{item.time ?? '—'}</span>
-        <div className="body">
-          <div className="title">{item.title}{item.pending && <em className="muted small"> · not synced</em>}</div>
+      <article className="grid grid-cols-[3.5rem_1fr_auto] gap-x-3 py-6">
+        <span className="pt-0.5 text-sm text-dim tabular-nums">{item.time ?? ''}</span>
+        <div className="min-w-0">
+          <p className="text-[1.0625rem] leading-snug">
+            {item.title}
+            {item.pending && <em className="ml-2 text-xs text-dim not-italic">Not synced yet</em>}
+          </p>
           {item.location && (
-            <a className="muted small loc" href={mapsUrl(item.location)} target="_blank" rel="noreferrer">
-              ⌖ {item.location}
+            <a className="mt-1 inline-block text-sm text-dim underline decoration-rule underline-offset-4"
+               href={mapsUrl(item.location)} target="_blank" rel="noreferrer">
+              {item.location}
             </a>
           )}
         </div>
-        <button className="x" onClick={() => { setDraft(item); setEditing(true) }} aria-label="Edit">✎</button>
+        <button className="cursor-pointer self-start text-sm text-dim hover:text-ai"
+                onClick={() => { setDraft(item); setEditing(true) }}>Edit</button>
       </article>
     )
   }
@@ -36,23 +42,8 @@ export default function ItemRow({ item, onUpdate, onRemove }) {
   }
 
   return (
-    <form className="card entry editing" onSubmit={save}>
-      <input className="f-title" value={draft.title} autoFocus
-             onChange={e => setDraft({ ...draft, title: e.target.value })}
-             placeholder="What?" aria-label="Title" />
-      <div className="editrow">
-        <input className="f-time" type="time" value={draft.time ?? ''}
-               onChange={e => setDraft({ ...draft, time: e.target.value })} aria-label="Time" />
-        <input className="f-loc" value={draft.location ?? ''}
-               onChange={e => setDraft({ ...draft, location: e.target.value })}
-               placeholder="Where? (optional)" aria-label="Location" />
-      </div>
-      <div className="editactions">
-        <button type="button" className="btn ghost danger"
-                onClick={() => { setEditing(false); onRemove(item.id) }}>Delete</button>
-        <button type="button" className="btn ghost" onClick={() => setEditing(false)}>Cancel</button>
-        <button type="submit" className="btn">Save</button>
-      </div>
-    </form>
+    <ItemForm draft={draft} setDraft={setDraft} onSubmit={save} submitLabel="Save"
+              onCancel={() => setEditing(false)}
+              onDelete={() => { setEditing(false); onRemove(item.id) }} />
   )
 }

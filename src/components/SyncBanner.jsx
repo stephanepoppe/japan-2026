@@ -6,12 +6,12 @@ export default function SyncBanner() {
   return (
     <>
       {waiting > 0 && !busy && (
-        <p className="syncbar">{waiting} change{waiting === 1 ? '' : 's'} waiting to sync</p>
+        <p className="text-sm text-dim">{waiting} change{waiting === 1 ? '' : 's'} waiting to sync</p>
       )}
       {rejected.length > 0 && (
-        <p className="syncbar bad">
+        <p className="flex items-start justify-between gap-3 text-sm text-ai">
           {rejected.length} change{rejected.length === 1 ? '' : 's'} couldn’t be saved: {rejected.join(', ')}
-          <button className="x" onClick={dismissRejected} aria-label="Dismiss">×</button>
+          <button className="cursor-pointer text-lg leading-none" onClick={dismissRejected} aria-label="Dismiss">×</button>
         </p>
       )}
     </>
