@@ -41,3 +41,8 @@ export async function accessEmail(token, { team, aud }, keys = fetchKeys) {
 /** OWNERS="a@x.be:Stéphane,b@y.be:Elke" -> Map(email -> display name). */
 export const parseOwners = s => new Map(String(s ?? '').split(',').map(e => e.trim()).filter(Boolean)
   .map(e => { const [mail, name] = e.split(':'); return [mail.trim().toLowerCase(), (name ?? mail).trim()] }))
+
+/** What a signed-in non-owner (a journal reader) may load: the journal and the built files it needs. */
+// ponytail: all of /assets/ is open; the planner's data lives behind /api/, which stays owners-only.
+export const readerMay = path => path === '/journal' || path === '/journal.html'
+  || path.startsWith('/journal/') || path.startsWith('/assets/')

@@ -1,7 +1,7 @@
 // Run: node src/lib/access.test.mjs
 // Signs tokens with a throwaway key and checks only the genuine, current, right-app one passes.
 import assert from 'node:assert/strict'
-import { accessEmail, parseOwners } from '../../functions/_access.js'
+import { accessEmail, parseOwners, readerMay } from '../../functions/_access.js'
 
 const team = 'team.cloudflareaccess.com', aud = 'app-aud'
 const alg = { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }
@@ -36,3 +36,9 @@ assert.equal(owners.get('b@y.be'), 'Elke')
 assert.equal(parseOwners(undefined).size, 0, 'unset = nobody is an owner')
 
 console.log('access ok')
+
+for (const p of ['/journal', '/journal/day/3', '/journal.html', '/assets/journal-x.js'])
+  assert.ok(readerMay(p), `reader may load ${p}`)
+for (const p of ['/', '/index.html', '/api/items', '/sw.js', '/journalx', '/journal-secret'])
+  assert.ok(!readerMay(p), `reader may not load ${p}`)
+console.log('reader paths ok')
