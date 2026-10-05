@@ -7,6 +7,8 @@ import BookingCard from '../components/BookingCard'
 import ItemRow from '../components/ItemRow'
 import AddItem from '../components/AddItem'
 import SyncBanner from '../components/SyncBanner'
+import AiPlan from '../components/AiPlan'
+import Surprise from '../components/Surprise'
 
 const pretty = iso => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB',
   { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
@@ -23,6 +25,7 @@ export default function Today() {
 
   const { items, add, update, remove } = useItems()
   const weatherFor = useWeather()
+  const weather = weatherFor(day)
   const entries = dayEntries(day, items)
   const stays = staysOn(day)
 
@@ -40,7 +43,7 @@ export default function Today() {
 
       <ArrivalCard today={now} />
 
-      <WeatherStrip w={weatherFor(day)} />
+      <WeatherStrip w={weather} />
 
       <section className="grid gap-2">
         <h2 className="font-mincho text-xl font-medium">The day</h2>
@@ -60,6 +63,9 @@ export default function Today() {
           <AddItem day={day} onAdd={add} />
         </div>
       </section>
+
+      <AiPlan key={day} day={day} weather={weather} auto onAdd={add} />
+      <Surprise key={`s${day}`} day={day} weather={weather} onAdd={add} />
     </div>
   )
 }

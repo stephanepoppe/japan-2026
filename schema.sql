@@ -12,6 +12,32 @@ CREATE TABLE IF NOT EXISTS items (
 );
 CREATE INDEX IF NOT EXISTS items_day ON items(day);
 
+-- AI day plans, area splits and Surprise me history (see migrations/0002).
+CREATE TABLE IF NOT EXISTS plans (
+  day        TEXT PRIMARY KEY,       -- YYYY-MM-DD
+  stay_key   TEXT NOT NULL,          -- which stay it belongs to, so "rethink" can clear its siblings
+  plan       TEXT NOT NULL,          -- JSON: area, intro, stops[]
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS plans_stay ON plans(stay_key);
+
+-- One split per stay: which area each day goes to.
+CREATE TABLE IF NOT EXISTS areas (
+  stay_key   TEXT PRIMARY KEY,
+  areas      TEXT NOT NULL,          -- JSON: [{ day, area, why }]
+  created_at TEXT NOT NULL
+);
+
+-- Everything Surprise me has shown, per city, so it never repeats across both phones.
+CREATE TABLE IF NOT EXISTS surprises (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  city       TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  place      TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS surprises_city ON surprises(city);
+
 -- Shared bookmarks for the Links tab. Seeds go in once with fixed ids; deleting one
 -- sticks unless someone re-runs this file.
 CREATE TABLE IF NOT EXISTS links (

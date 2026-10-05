@@ -7,6 +7,8 @@ import BookingCard from '../components/BookingCard'
 import ItemRow from '../components/ItemRow'
 import AddItem from '../components/AddItem'
 import SyncBanner from '../components/SyncBanner'
+import AiPlan from '../components/AiPlan'
+import Surprise from '../components/Surprise'
 
 const MONTH = '2026-10'
 const DAYS_IN = 31
@@ -84,6 +86,9 @@ export default function Calendar() {
 
         <AddItem day={sel} onAdd={add} />
       </section>
+
+      <AiPlan key={sel} day={sel} weather={weatherFor(sel)} auto={false} onAdd={add} />
+      <Surprise key={`s${sel}`} day={sel} weather={weatherFor(sel)} onAdd={add} />
 
       {loose.length > 0 && (
         <section>
