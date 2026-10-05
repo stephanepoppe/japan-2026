@@ -1,0 +1,28 @@
+/* Map chrome and the two motions: the route drawing itself (RouteMap), photos developing. */
+.maplibregl-map { font: inherit; background: var(--bg); }
+.maplibregl-ctrl-attrib { font-size: 10px; }
+
+.pin-holder { display: block; padding: 6px; border: 0; background: none; cursor: pointer; }
+.pin {
+  position: relative; display: block; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 0 2px var(--bg);
+  animation: pin-drop .5s cubic-bezier(.2,.8,.3,1.3) both;
+}
+.pin.newest::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--accent);
+  animation: pin-pulse 2.2s ease-out .6s infinite;
+}
+@keyframes pin-drop { from { transform: translateY(-10px) scale(.4); opacity: 0; } }
+@keyframes pin-pulse { from { transform: scale(1); opacity: .55; } to { transform: scale(3.4); opacity: 0; } }
+
+/* A print developing: starts as paper, gains tone, then colour. */
+.develop { opacity: 0; filter: saturate(0) brightness(1.3) contrast(.8); transition: opacity 1s ease, filter 2.2s ease .2s; }
+.develop.in { opacity: 1; filter: none; }
+
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pin, .pin.newest::after { animation: none; }
+  .develop { opacity: 1; filter: none; transition: none; }
+}

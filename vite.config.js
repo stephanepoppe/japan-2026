@@ -19,5 +19,5 @@ const precache = () => ({
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), precache()],
-  build: { outDir: 'dist' },
+  build: { outDir: 'dist', rollupOptions: { input: { main: 'index.html', journal: 'journal.html' } } },
 })

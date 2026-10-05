@@ -1,0 +1,3 @@
+# The journal is its own page (Pages serves journal.html at /journal);
+# every /journal/... address is a view inside it.
+/journal/*      /journal  200
