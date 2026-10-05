@@ -1,7 +1,7 @@
 // Who may see what. Cloudflare Access sits in front of japan.elke-stephane.gent and lets
 // anyone through who proves they own an email address (one-time PIN). This decides the rest:
 //   owners (OWNERS)  -> everything
-//   anyone else      -> the journal only (readerMay); any other page sends them to /journal
+//   anyone else      -> the journal only: read it, comment (readerMay); other pages send them to /journal
 // The pages.dev address isn't behind Access, so it only ever redirects to the real one.
 import { accessEmail, parseOwners, readerMay } from './_access.js'
 
@@ -42,7 +42,7 @@ async function guard({ request, env, next }) {
   const owner = parseOwners(env.OWNERS).get(email)
   if (owner) return pass(email, owner)
   // Readers carry no identity headers, so the API never mistakes them for an owner.
-  if (readerMay(url.pathname)) return next(new Request(request, { headers }))
+  if (readerMay(url.pathname, request.method)) return next(new Request(request, { headers }))
   if (url.pathname.startsWith('/api/')) return new Response('Forbidden', { status: 403 })
   return Response.redirect(`${url.origin}/journal`, 302)
 }

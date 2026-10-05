@@ -14,3 +14,8 @@ database_id = "fb54895f-b27d-4719-9bde-31154ad9f95d"
 SITE_HOST = "japan.elke-stephane.gent"
 ACCESS_TEAM = "elke-stephane-japan.cloudflareaccess.com"
 ACCESS_AUD = "a2f91e88a6e6d530dbe57fb8f58677c1ff9a80ece5ffa8f476acc3d530e3dc1e"
+
+# Journal photos (functions/api/journal/photos). Create once: `wrangler r2 bucket create japan-2026-photos`.
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "japan-2026-photos"

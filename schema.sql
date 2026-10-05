@@ -54,3 +54,27 @@ INSERT OR IGNORE INTO links (id, title, url, created_by, created_at) VALUES
   ('seed-maps',     'Google Maps',            'https://maps.google.com',                    'seed', '2026-01-01T00:00:03Z'),
   ('seed-jorudan',  'Japan Transit (Jorudan)','https://world.jorudan.co.jp/mln/en/',        'seed', '2026-01-01T00:00:04Z'),
   ('seed-klm',      'KLM my trip',            'https://www.klm.be/trip',                    'seed', '2026-01-01T00:00:05Z');
+
+-- The journal (see migrations/0003).
+CREATE TABLE IF NOT EXISTS moments (
+  id         TEXT PRIMARY KEY,
+  day        TEXT NOT NULL,          -- YYYY-MM-DD, Japan time
+  time       TEXT NOT NULL,          -- HH:MM, Japan time
+  place_name TEXT,
+  lat        REAL,                   -- no coordinates = no pin on the map
+  lon        REAL,
+  text       TEXT NOT NULL,
+  photos     TEXT NOT NULL,          -- JSON: [{ key, w, h }], files in the PHOTOS R2 bucket
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS moments_day ON moments(day, time);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id         TEXT PRIMARY KEY,
+  moment_id  TEXT NOT NULL,
+  name       TEXT NOT NULL,          -- typed by the reader; readers have no verified identity here
+  text       TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS comments_moment ON comments(moment_id);

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { BOOKINGS } from '../lib/bookings'
 import RouteMap from './RouteMap'
-import { SAMPLE } from './sample'
 
 // The trip's cities in order, from the stays. Module-level so the map draws once.
 const ROUTE = BOOKINGS
@@ -9,8 +8,30 @@ const ROUTE = BOOKINGS
   .map(b => ({ city: b.city.replace(/, Japan$/, ''), lat: b.lat, lon: b.lon, from: b.start.slice(0, 10) }))
 const FIRST = ROUTE[0]?.from
 
-const DATA = SAMPLE
-const DAYS = DATA.days.filter(d => d.moments.length).sort((a, b) => a.day.localeCompare(b.day))
+
+/** Now in Japan, where the moments happen: { day: 'YYYY-MM-DD', time: 'HH:MM' }. */
+const tokyo = () => { const s = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Tokyo' }); return { day: s.slice(0, 10), time: s.slice(11, 16) } }
+const NOW = tokyo().day
+
+/** The city we slept in that day: the last stay that had started by then. */
+const cityOn = day => ROUTE.filter(c => c.from <= day).at(-1)?.city ?? ROUTE[0]?.city ?? ''
+
+/** API moments (sorted by day, time) -> [{ day, city, moments }]. */
+function byDay(moments) {
+  const days = []
+  for (const m of moments) {
+    if (days.at(-1)?.day !== m.day) days.push({ day: m.day, city: cityOn(m.day), moments: [] })
+    days.at(-1).moments.push(m)
+  }
+  return days
+}
+const pinned = ms => ms.filter(m => m.place.lat != null)
+
+async function api(path, init) {
+  const r = await fetch(path, init)
+  if (!r.ok) throw new Error((await r.json().catch(() => null))?.error ?? `Fout ${r.status}`)
+  return r.status === 204 ? null : r.json()
+}
 
 const dayNumber = day => Math.round((Date.parse(day) - Date.parse(FIRST)) / 864e5) + 1
 const longDate = day => new Date(day + 'T00:00:00Z')
@@ -75,6 +96,7 @@ function Photo({ p, fill }) {
 
 /** First photo large; the rest share one row beneath it. */
 function Photos({ photos }) {
+  if (!photos.length) return null
   const [first, ...rest] = photos
   const portrait = first.h > first.w
   return (
@@ -91,20 +113,26 @@ function Photos({ photos }) {
 
 // ---- comments ----------------------------------------------------------------------
 
-const timeOf = iso => iso.slice(11, 16)
+const whenOf = iso => new Date(iso).toLocaleString('nl-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 function Comments({ moment }) {
   const [list, setList] = useState(moment.comments)
   const [name, setName] = useState(() => { try { return localStorage.getItem('journal.name') ?? '' } catch { return '' } })
   const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
 
-  const send = e => {
+  const send = async e => {
     e.preventDefault()
-    if (!name.trim() || !text.trim()) return
+    if (!name.trim() || !text.trim() || busy) return
     try { localStorage.setItem('journal.name', name.trim()) } catch {}
-    // ponytail: sample only keeps it on screen; POST /api/journal/comments comes with the backend
-    setList([...list, { id: crypto.randomUUID(), name: name.trim(), text: text.trim(), at: new Date().toISOString() }])
-    setText('')
+    setBusy(true); setError('')
+    try {
+      const c = await api('/api/journal/comments', { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ moment_id: moment.id, name: name.trim(), text: text.trim() }) })
+      setList([...list, c]); setText('')
+    } catch (err) { setError(`Je reactie is niet geplaatst: ${err.message}`) }
+    setBusy(false)
   }
 
   const field = 'w-full rounded-md border border-rule bg-raised px-3 py-2.5 placeholder:text-dim focus:border-ai focus:outline-none'
@@ -117,14 +145,15 @@ function Comments({ moment }) {
       <div className="mt-4 grid gap-5 border-l border-rule pl-4">
         {list.map(c => (
           <div key={c.id}>
-            <p className="text-sm"><span className="font-medium">{c.name}</span> <span className="text-dim tabular-nums">{timeOf(c.at)}</span></p>
+            <p className="text-sm"><span className="font-medium">{c.name}</span> <span className="text-dim tabular-nums">{whenOf(c.at)}</span></p>
             <p className="leading-relaxed">{c.text}</p>
           </div>
         ))}
         <form className="grid gap-2" onSubmit={send}>
           <input className={field} value={name} onChange={e => setName(e.target.value)} placeholder="Jouw naam" aria-label="Jouw naam" />
           <textarea className={field} rows={2} value={text} onChange={e => setText(e.target.value)} placeholder="Schrijf iets" aria-label="Reactie" />
-          <button className="inline-flex min-h-11 items-center justify-self-start rounded-md bg-ai px-5 text-sm font-medium text-on-ai">Plaats reactie</button>
+          {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+          <button disabled={busy} className="inline-flex min-h-11 items-center justify-self-start rounded-md bg-ai px-5 text-sm font-medium text-on-ai disabled:opacity-60">{busy ? 'Bezig…' : 'Plaats reactie'}</button>
         </form>
       </div>
     </details>
@@ -133,26 +162,47 @@ function Comments({ moment }) {
 
 // ---- views -------------------------------------------------------------------------
 
-function Moment({ m }) {
+/** Two taps to delete, no dialog: the first tap only arms the button. */
+function DeleteMoment({ id, reload }) {
+  const [armed, setArmed] = useState(false)
+  const [error, setError] = useState('')
+  const del = async () => {
+    if (!armed) return setArmed(true)
+    try { await api(`/api/journal/moments/${id}`, { method: 'DELETE' }); reload() }
+    catch (err) { setError(err.message); setArmed(false) }
+  }
+  return (
+    <span className="ml-auto flex items-center gap-2">
+      {error && <span role="alert" className="text-red-700">{error}</span>}
+      <button type="button" onClick={del} onBlur={() => setArmed(false)}
+              className={armed ? 'font-medium text-red-700' : 'text-dim underline'}>
+        {armed ? 'Tik nogmaals om te verwijderen' : 'Verwijder'}
+      </button>
+    </span>
+  )
+}
+
+function Moment({ m, owner, reload }) {
   return (
     <article className="mt-20 first:mt-14">
       <Photos photos={m.photos} />
       <div className="mt-5 max-w-[34rem]">
-        <p className="flex gap-3 text-sm text-dim"><span className="tabular-nums">{m.time}</span><span>{m.place.name}</span></p>
-        <p className="mt-2 font-mincho text-[1.1875rem] leading-[1.8]">{m.text}</p>
+        <p className="flex flex-wrap gap-3 text-sm text-dim"><span className="tabular-nums">{m.time}</span><span>{m.place.name}</span>
+          {owner && <DeleteMoment id={m.id} reload={reload} />}</p>
+        {m.text && <p className="mt-2 font-mincho text-[1.1875rem] leading-[1.8] whitespace-pre-line">{m.text}</p>}
         <Comments moment={m} />
       </div>
     </article>
   )
 }
 
-function DayView({ entry, go }) {
-  const i = DAYS.indexOf(entry)
-  const prev = DAYS[i - 1], next = DAYS[i + 1]
-  const newest = DAYS.at(-1).moments.at(-1).id
+function DayView({ entry, days, go, owner, reload }) {
+  const i = days.indexOf(entry)
+  const prev = days[i - 1], next = days[i + 1]
+  const newest = pinned(days.flatMap(d => d.moments)).at(-1)?.id
   return (
     <>
-      <RouteMap route={ROUTE} now={DATA.now} focus={entry.moments} newest={newest}
+      <RouteMap route={ROUTE} now={NOW} focus={pinned(entry.moments)} newest={newest}
                 className="h-[42vh] min-h-64 w-full" />
       <main className="mx-auto max-w-2xl px-6 pb-24">
         <header className="mt-10">
@@ -160,7 +210,7 @@ function DayView({ entry, go }) {
           <h1 className="font-mincho text-6xl leading-none font-medium tracking-tight">Dag {dayNumber(entry.day)}</h1>
         </header>
 
-        {entry.moments.map(m => <Moment key={m.id} m={m} />)}
+        {entry.moments.map(m => <Moment key={m.id} m={m} owner={owner} reload={reload} />)}
 
         <nav className="mt-24 grid grid-cols-2 gap-3" aria-label="Andere dagen">
           {prev ? <Link to={`/journal/${prev.day}`} go={go} className={`${BTN} h-auto justify-start py-3 text-left`}>
@@ -177,16 +227,16 @@ function DayView({ entry, go }) {
   )
 }
 
-function RouteView({ go }) {
-  const all = DAYS.flatMap(d => d.moments.map(m => ({ ...m, day: d.day })))
+function RouteView({ days, go }) {
+  const all = pinned(days.flatMap(d => d.moments))
   return (
     <>
-      <RouteMap route={ROUTE} now={DATA.now} focus={all} newest={all.at(-1)?.id} interactive
+      <RouteMap route={ROUTE} now={NOW} focus={all} newest={all.at(-1)?.id} interactive
                 onPin={m => go(`/journal/${m.day}`)} className="h-[62vh] w-full" />
       <main className="mx-auto max-w-2xl px-6 pb-24">
         <h1 className="mt-10 font-mincho text-4xl font-medium">De route</h1>
         <ol className="mt-6 divide-y divide-rule border-y border-rule">
-          {DAYS.map(d => (
+          {days.map(d => (
             <li key={d.day}>
               <Link to={`/journal/${d.day}`} go={go}
                     className="-mx-3 grid grid-cols-[4.5rem_1fr_auto] items-center gap-3 rounded-md px-3 py-4 transition-colors hover:bg-ai-wash active:bg-ai-wash">
@@ -198,31 +248,153 @@ function RouteView({ go }) {
             </li>
           ))}
         </ol>
-        <p className="mt-6 text-sm text-dim">Nog te gaan: {ROUTE.filter(c => c.from > DATA.now).map(c => c.city).join(', ')}.</p>
+        <p className="mt-6 text-sm text-dim">Nog te gaan: {ROUTE.filter(c => c.from > NOW).map(c => c.city).join(', ') || 'niets, we zijn thuis'}.</p>
       </main>
     </>
   )
 }
 
+// ---- posting a moment (owners) -----------------------------------------------------
+
+/** Phone photo -> JPEG of at most 2048 px. Redrawing on a canvas also drops EXIF, GPS included. */
+async function shrink(file, max = 2048) {
+  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  const f = Math.min(1, max / Math.max(bmp.width, bmp.height))
+  const w = Math.round(bmp.width * f), h = Math.round(bmp.height * f)
+  const canvas = Object.assign(document.createElement('canvas'), { width: w, height: h })
+  canvas.getContext('2d').drawImage(bmp, 0, 0, w, h)
+  bmp.close()
+  const blob = await new Promise(ok => canvas.toBlob(ok, 'image/jpeg', 0.85))
+  return { blob, w, h }
+}
+
+function NewMoment({ posted }) {
+  const start = tokyo()
+  const [day, setDay] = useState(start.day)
+  const [time, setTime] = useState(start.time)
+  const [text, setText] = useState('')
+  const [files, setFiles] = useState([])
+  const [place, setPlace] = useState('')
+  const [pos, setPos] = useState({ state: 'zoeken' })
+  const [status, setStatus] = useState('')
+  const [error, setError] = useState('')
+
+  // Where we are now is the pin; a moment posted later can drop it.
+  // ponytail: no reverse geocoding or reading GPS from the photo; the place name is typed.
+  useEffect(() => {
+    if (!navigator.geolocation) return setPos({ state: 'geen' })
+    navigator.geolocation.getCurrentPosition(
+      p => setPos({ state: 'ok', lat: +p.coords.latitude.toFixed(5), lon: +p.coords.longitude.toFixed(5) }),
+      () => setPos({ state: 'geen' }), { enableHighAccuracy: true, timeout: 15000 })
+  }, [])
+
+  const previews = files.map(f => URL.createObjectURL(f))
+  useEffect(() => () => previews.forEach(URL.revokeObjectURL), [files])   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const submit = async e => {
+    e.preventDefault()
+    if (status) return
+    if (!text.trim() && !files.length) return setError('Voeg een foto of wat tekst toe.')
+    setError('')
+    try {
+      const photos = []
+      for (const [i, file] of files.entries()) {
+        setStatus(`Foto ${i + 1} van ${files.length} uploaden…`)
+        const { blob, w, h } = await shrink(file)
+        const { key } = await api('/api/journal/photos', { method: 'POST', headers: { 'content-type': 'image/jpeg' }, body: blob })
+        photos.push({ key, w, h })
+      }
+      setStatus('Moment plaatsen…')
+      const keep = pos.state === 'ok'
+      await api('/api/journal/moments', { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ day, time, text, photos,
+          place: { name: place, lat: keep ? pos.lat : null, lon: keep ? pos.lon : null } }) })
+      await posted(day)
+    } catch (err) {
+      setError(`Niet geplaatst: ${err.message}. Je tekst en foto's staan er nog, probeer opnieuw.`)
+      setStatus('')
+    }
+  }
+
+  const field = 'w-full rounded-md border border-rule bg-raised px-3 py-2.5 placeholder:text-dim focus:border-ai focus:outline-none'
+  const label = 'grid gap-1.5 text-sm font-medium'
+  return (
+    <main className="mx-auto max-w-2xl px-6 pb-24">
+      <h1 className="mt-10 font-mincho text-4xl font-medium">Nieuw moment</h1>
+      <form className="mt-8 grid gap-6" onSubmit={submit}>
+        <label className={label}>Foto's
+          <input type="file" accept="image/*" multiple className={field}
+                 onChange={e => setFiles([...files, ...e.target.files].slice(0, 12))} />
+        </label>
+        {files.length > 0 && (
+          <ul className="grid grid-cols-4 gap-1" aria-label="Gekozen foto's">
+            {previews.map((src, i) => (
+              <li key={src} className="relative">
+                <img src={src} alt="" className="aspect-square w-full object-cover" />
+                <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                        className="absolute top-1 right-1 rounded-md bg-paper/90 px-2 py-1 text-xs font-medium" aria-label={`Foto ${i + 1} weghalen`}>✕</button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <label className={label}>Wat gebeurde er?
+          <textarea className={`${field} font-mincho text-lg leading-relaxed`} rows={5} value={text} onChange={e => setText(e.target.value)} maxLength={2000} />
+        </label>
+        <label className={label}>Waar?
+          <input className={field} value={place} onChange={e => setPlace(e.target.value)} placeholder="Bv. Rokuyosha, Kyoto" maxLength={200} />
+          <span className="font-normal text-dim">
+            {pos.state === 'zoeken' && 'Locatie zoeken voor de pin op de kaart…'}
+            {pos.state === 'ok' && <>Pin op je huidige locatie. <button type="button" className="text-ai underline" onClick={() => setPos({ state: 'uit' })}>Geen pin</button></>}
+            {pos.state === 'uit' && 'Geen pin op de kaart.'}
+            {pos.state === 'geen' && 'Geen locatie gevonden, dus geen pin op de kaart.'}
+          </span>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className={label}>Dag<input type="date" className={field} value={day} onChange={e => setDay(e.target.value)} required /></label>
+          <label className={label}>Uur (Japan)<input type="time" className={field} value={time} onChange={e => setTime(e.target.value)} required /></label>
+        </div>
+        {error && <p role="alert" className="text-red-700">{error}</p>}
+        <button disabled={!!status} className="inline-flex min-h-12 items-center justify-center rounded-md bg-ai px-5 font-medium text-on-ai disabled:opacity-60">
+          {status || 'Deel moment'}
+        </button>
+      </form>
+    </main>
+  )
+}
+
 export default function Journal() {
   const [path, go] = usePath()
+  const [data, setData] = useState(null)
+  const load = () => api('/api/journal').then(setData, () => setData({ error: true }))
+  useEffect(() => { load() }, [])
+
+  const days = byDay(data?.moments ?? [])
   const isRoute = path.startsWith('/journal/route')
+  const isNew = path.startsWith('/journal/new') && data?.owner
   const asked = path.match(/\/journal\/(\d{4}-\d{2}-\d{2})/)?.[1]
-  const entry = DAYS.find(d => d.day === asked) ?? DAYS.at(-1)
+  const entry = days.find(d => d.day === asked) ?? days.at(-1)
+  const posted = day => load().then(() => go(`/journal/${day}`))
+
+  let view
+  if (!data) view = <p className="px-6 py-20 text-dim">Laden…</p>
+  else if (data.error) view = <p className="px-6 py-20 font-mincho text-xl">Het dagboek kon niet laden. Probeer het straks opnieuw.</p>
+  else if (isNew) view = <NewMoment posted={posted} />
+  else if (isRoute) view = <RouteView days={days} go={go} />
+  else if (entry) view = <DayView key="day" entry={entry} days={days} go={go} owner={data.owner} reload={load} />
+  else view = <p className="px-6 py-20 font-mincho text-xl">Nog niets gedeeld. Kom straks terug.</p>
 
   return (
     <>
       <div className="fixed inset-x-0 top-0 z-[1000] flex items-center justify-between border-b border-rule bg-paper/90 px-6 py-2 text-sm backdrop-blur-md">
         <Link to="/journal" go={go} className="font-mincho text-base">Ons Japan-dagboek</Link>
-        {isRoute
-          ? <Link to="/journal" go={go} className={BTN_SMALL}><Chevron dir="left" />Naar laatste dag</Link>
-          : <Link to="/journal/route" go={go} className={BTN_SMALL}>Bekijk hele route</Link>}
+        <span className="flex gap-2">
+          {data?.owner && !isNew && <Link to="/journal/new" go={go} className={BTN_SMALL}>+ Moment</Link>}
+          {isRoute || isNew
+            ? <Link to="/journal" go={go} className={BTN_SMALL}><Chevron dir="left" />Naar laatste dag</Link>
+            : <Link to="/journal/route" go={go} className={BTN_SMALL}>Hele route</Link>}
+        </span>
       </div>
-      <div className="pt-[3.3rem]">
-        {isRoute ? <RouteView go={go} /> : entry
-          ? <DayView key="day" entry={entry} go={go} />
-          : <p className="px-6 py-20 font-mincho text-xl">Nog niets gedeeld. Kom straks terug.</p>}
-      </div>
+      <div className="pt-[3.3rem]">{view}</div>
     </>
   )
 }

@@ -42,7 +42,14 @@ export async function accessEmail(token, { team, aud }, keys = fetchKeys) {
 export const parseOwners = s => new Map(String(s ?? '').split(',').map(e => e.trim()).filter(Boolean)
   .map(e => { const [mail, name] = e.split(':'); return [mail.trim().toLowerCase(), (name ?? mail).trim()] }))
 
-/** What a signed-in non-owner (a journal reader) may load: the journal and the built files it needs. */
+/**
+ * What a signed-in non-owner (a journal reader) may do: read the journal, its built files and
+ * photos, and leave a comment. Posting or deleting moments stays owners-only.
+ */
 // ponytail: all of /assets/ is open; the planner's data lives behind /api/, which stays owners-only.
-export const readerMay = path => path === '/journal' || path === '/journal.html'
-  || path.startsWith('/journal/') || path.startsWith('/assets/')
+export function readerMay(path, method = 'GET') {
+  if (method === 'POST') return path === '/api/journal/comments'
+  if (method !== 'GET' && method !== 'HEAD') return false
+  return path === '/journal' || path === '/journal.html' || path.startsWith('/journal/')
+    || path.startsWith('/assets/') || path === '/api/journal' || path.startsWith('/api/journal/photos/')
+}

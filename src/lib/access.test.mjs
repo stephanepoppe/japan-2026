@@ -39,6 +39,12 @@ console.log('access ok')
 
 for (const p of ['/journal', '/journal/day/3', '/journal.html', '/assets/journal-x.js'])
   assert.ok(readerMay(p), `reader may load ${p}`)
-for (const p of ['/', '/index.html', '/api/items', '/sw.js', '/journalx', '/journal-secret'])
+for (const p of ['/', '/index.html', '/api/items', '/sw.js', '/journalx', '/journal-secret', '/api/journal/moments'])
   assert.ok(!readerMay(p), `reader may not load ${p}`)
+assert.ok(readerMay('/api/journal'), 'reader may read the journal')
+assert.ok(readerMay('/api/journal/photos/x.jpg'), 'reader may see photos')
+assert.ok(readerMay('/api/journal/comments', 'POST'), 'reader may comment')
+for (const [p, m] of [['/api/journal/moments', 'POST'], ['/api/journal/photos', 'POST'],
+  ['/api/journal/moments/x', 'DELETE'], ['/journal', 'POST'], ['/api/items', 'POST']])
+  assert.ok(!readerMay(p, m), `reader may not ${m} ${p}`)
 console.log('reader paths ok')
