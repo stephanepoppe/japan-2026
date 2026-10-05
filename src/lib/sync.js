@@ -67,31 +67,12 @@ export function remove(coll, id) {
 
 // ---- draining the outbox ----------------------------------------------------------
 
-/** Who added a thing. Asked once per device and remembered.
- *  A label, not a credential — behind the shared passphrase there is no verified
- *  identity to report, so the server treats this as a display name only. */
-export function whoAmI() {
-  let n = null
-  try { n = localStorage.getItem('trip.user') } catch { /* no storage */ }
-  // Only ask where asking is possible. This runs on the outbox path, which also
-  // drains in the background — a prompt that fires there would be baffling, and
-  // there is no prompt at all under a test harness or a service worker.
-  if (!n && typeof prompt === 'function') {
-    n = (prompt('Your name? (so the other one knows who added what)') || '').trim().slice(0, 40)
-    if (n) { try { localStorage.setItem('trip.user', n) } catch { /* ignore */ } }
-  }
-  return n || 'someone'
-}
-
 const request = ({ coll, op, id, body }) => {
   const url = op === 'add' ? `/api/${coll}` : `/api/${coll}/${encodeURIComponent(id)}`
   const method = { add: 'POST', patch: 'PATCH', delete: 'DELETE' }[op]
   return fetch(url, {
     method,
-    headers: {
-      ...(body ? { 'content-type': 'application/json' } : {}),
-      'X-Trip-User': whoAmI(),
-    },
+    headers: body ? { 'content-type': 'application/json' } : {},   // who: from the Access sign-in
     body: body ? JSON.stringify(body) : undefined,
   })
 }

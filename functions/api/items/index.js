@@ -1,12 +1,7 @@
 // GET  /api/items   -> all day items
 // POST /api/items   -> add one
-// Identity comes from Cloudflare Access, which sits in front of the whole site (Q7a):
-// it injects the verified email, so there's no second auth system here.
-// Access would inject a verified email. Behind the passphrase there is no verified
-// identity, so fall back to a name the device supplies — a label, not an auth claim.
-const email = req =>
-  req.headers.get('Cf-Access-Authenticated-User-Email')
-  ?? ((req.headers.get('X-Trip-User') || '').slice(0, 40) || 'someone')
+// Who added it: the verified sign-in email, set by functions/_middleware.js.
+const email = req => req.headers.get('X-Trip-Email') ?? 'unknown'
 export const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 

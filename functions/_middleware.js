@@ -1,79 +1,56 @@
-// Cloudflare Access can't protect a production *.pages.dev URL — Access needs a zone
-// you own, and pages.dev isn't one. This is the stand-in: one shared passphrase, a
-// signed cookie that lasts a year, and a login page for anything without one.
-//
-// ponytail: deliberately not a user system. Two people, one trip, one secret. If this
-// ever needs per-person identity or revocation, put a real domain on Cloudflare and
-// use Access — that is the upgrade path, not adding users here.
-const COOKIE = 'trip_auth'
-const YEAR = 60 * 60 * 24 * 365
-const OPEN = ['/__auth', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/icon.svg']
+// Who may see what. Cloudflare Access sits in front of japan.elke-stephane.gent and lets
+// anyone through who proves they own an email address (one-time PIN). This decides the rest:
+//   owners (OWNERS)  -> everything
+//   anyone else      -> a "this is private" page (journal readers get their own paths later)
+// The pages.dev address isn't behind Access, so it only ever redirects to the real one.
+import { accessEmail, parseOwners } from './_access.js'
 
-const enc = new TextEncoder()
+const OPEN = ['/robots.txt', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/icon.svg']
 
-/** Deterministic token derived from the passphrase — the passphrase itself never
- *  goes in the cookie, so reading the cookie doesn't hand over the secret. */
-async function token(secret) {
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('japan-2026'))
-  return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('')
-}
-
-/** Length-independent compare so a wrong guess can't be timed. */
-function same(a, b) {
-  if (a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return diff === 0
-}
-
-const page = (msg = '') => new Response(`<!doctype html>
+const privatePage = email => new Response(`<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Japan 2026</title>
-<style>
-  :root{color-scheme:dark}
-  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1c1917;color:#fafaf9;
-       font:16px/1.5 ui-sans-serif,-apple-system,sans-serif}
-  form{display:grid;gap:.75rem;width:min(22rem,86vw)}
-  h1{font-size:1.2rem;margin:0 0 .25rem}
-  input,button{font:inherit;padding:.7rem .8rem;border-radius:10px;border:1px solid #44403c}
-  input{background:#292524;color:inherit}
-  button{background:#fb7185;color:#fff;border:0;font-weight:600}
-  p{margin:0;color:#a8a29e;font-size:.85rem}
-</style>
-<form method="POST" action="/__auth">
-  <h1>Japan 2026</h1>
-  ${msg ? `<p style="color:#fb7185">${msg}</p>` : '<p>Enter the trip passphrase.</p>'}
-  <input type="password" name="p" autofocus autocomplete="current-password" aria-label="Passphrase">
-  <button type="submit">Open</button>
-</form>`, { status: msg ? 401 : 401, headers: { 'content-type': 'text/html; charset=utf-8' } })
+<meta name="robots" content="noindex, nofollow"><title>Privé</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f6f6f2;color:#1b1e26;
+font:16px/1.6 -apple-system,"Hiragino Sans",sans-serif}main{max-width:26rem;padding:24px}
+h1{font:500 1.6rem/1.2 "Hiragino Mincho ProN",serif;margin:0 0 .5rem}p{margin:.5rem 0;color:#6a6f7c}
+a{color:#2443c4}</style>
+<main><h1>Deze pagina is privé</h1>
+<p>Je bent aangemeld als ${email.replace(/[<>&"]/g, '')}, maar dit adres heeft geen toegang.</p>
+<p><a href="/cdn-cgi/access/logout">Afmelden en een ander adres gebruiken</a></p></main>`,
+  { status: 403, headers: { 'content-type': 'text/html; charset=utf-8' } })
 
-export async function onRequest({ request, env, next }) {
-  const secret = env.TRIP_PASSPHRASE
-  if (!secret) return next()                 // unset locally: don't lock yourself out of dev
+/** Private site: no search engine may index anything, error pages included. */
+export async function onRequest(ctx) {
+  const res = await guard(ctx)
+  const out = new Response(res.body, res)        // responses from next() have immutable headers
+  out.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
+  return out
+}
 
+async function guard({ request, env, next }) {
   const url = new URL(request.url)
-  if (OPEN.includes(url.pathname) && url.pathname !== '/__auth') return next()
 
-  const want = await token(secret)
+  if (env.SITE_HOST && url.hostname !== env.SITE_HOST && url.hostname.endsWith('.pages.dev')) {
+    return Response.redirect(`https://${env.SITE_HOST}${url.pathname}${url.search}`, 301)
+  }
+  if (OPEN.includes(url.pathname)) return next()
 
-  if (url.pathname === '/__auth') {
-    if (request.method !== 'POST') return Response.redirect(url.origin + '/', 302)
-    const given = (await request.formData()).get('p') ?? ''
-    if (!same(String(given), secret)) return page('Not that one.')
-    return new Response(null, {
-      status: 302,
-      headers: {
-        location: '/',
-        'set-cookie': `${COOKIE}=${want}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${YEAR}`,
-      },
-    })
+  // Identity travels to the API only through these headers, set here and nowhere else.
+  const headers = new Headers(request.headers)
+  headers.delete('X-Trip-Email'); headers.delete('X-Trip-Name')
+  const pass = (email, name) => {
+    headers.set('X-Trip-Email', email); headers.set('X-Trip-Name', name)
+    return next(new Request(request, { headers }))
   }
 
-  const got = (request.headers.get('cookie') ?? '')
-    .split(';').map(c => c.trim().split('='))
-    .find(([k]) => k === COOKIE)?.[1] ?? ''
+  if (!env.ACCESS_AUD) return pass('dev@localhost', 'Dev')   // local dev has no Access in front
 
-  return same(got, want) ? next() : page()
+  const token = request.headers.get('Cf-Access-Jwt-Assertion')
+    ?? (request.headers.get('cookie') ?? '').match(/(?:^|;\s*)CF_Authorization=([^;]+)/)?.[1]
+  const email = await accessEmail(token, { team: env.ACCESS_TEAM, aud: env.ACCESS_AUD })
+  // No valid sign-in: start over at the Access login (it sends people back here afterwards).
+  if (!email) return Response.redirect(`${url.origin}/cdn-cgi/access/login/${url.hostname}?redirect_url=${encodeURIComponent(url.pathname + url.search)}`, 302)
+
+  const owner = parseOwners(env.OWNERS).get(email)
+  return owner ? pass(email, owner) : privatePage(email)
 }

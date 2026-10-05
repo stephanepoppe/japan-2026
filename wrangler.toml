@@ -7,3 +7,10 @@ binding = "DB"
 database_name = "japan-2026"
 # the UUID from `wrangler d1 list`, not the name — Pages rejects the name
 database_id = "fb54895f-b27d-4719-9bde-31154ad9f95d"
+
+# Cloudflare Access in front of the custom domain (see functions/_middleware.js).
+# Owner emails are not here: they're the OWNERS secret (`wrangler pages secret put OWNERS`).
+[vars]
+SITE_HOST = "japan.elke-stephane.gent"
+ACCESS_TEAM = "elke-stephane-japan.cloudflareaccess.com"
+ACCESS_AUD = "a2f91e88a6e6d530dbe57fb8f58677c1ff9a80ece5ffa8f476acc3d530e3dc1e"

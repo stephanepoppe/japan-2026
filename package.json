@@ -8,10 +8,11 @@
     "preview": "vite preview",
     "dev:full": "npm run build && wrangler pages dev",
     "db:local": "wrangler d1 execute japan-2026 --local --file=schema.sql",
-    "test": "node src/lib/bookings.test.mjs && node src/lib/sync.test.mjs && node src/lib/plans.test.mjs"
+    "test": "node src/lib/bookings.test.mjs && node src/lib/sync.test.mjs && node src/lib/plans.test.mjs && node src/lib/access.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
+    "maplibre-gl": "^6.12.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

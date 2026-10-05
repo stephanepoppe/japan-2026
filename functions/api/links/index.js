@@ -2,7 +2,7 @@ import { json } from '../items/index.js'
 
 // GET  /api/links   -> all bookmarks, oldest first
 // POST /api/links   -> add one {title, url}
-const email = req => req.headers.get('Cf-Access-Authenticated-User-Email') ?? 'unknown'
+const email = req => req.headers.get('X-Trip-Email') ?? 'unknown'   // set by functions/_middleware.js
 
 export async function onRequestGet({ env }) {
   const { results } = await env.DB
