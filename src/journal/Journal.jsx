@@ -80,6 +80,7 @@ function Photo({ p, fill }) {
   const img = useRef(null)
   const [seen, setSeen] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const big = useRef(null)
   useEffect(() => {
     if (img.current.complete && img.current.naturalWidth) setLoaded(true)   // cached: onLoad already fired
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setSeen(true); io.disconnect() } }, { threshold: 0.25 })
@@ -88,8 +89,15 @@ function Photo({ p, fill }) {
   }, [])
   return (
     <div ref={ref} className="overflow-hidden bg-rule" style={{ aspectRatio: fill ? '1' : `${p.w} / ${p.h}` }}>
-      <img ref={img} src={p.url} alt="" loading="lazy" decoding="async" onLoad={() => setLoaded(true)}
-           className={`develop size-full object-cover ${seen && loaded ? 'in' : ''}`} />
+      <button type="button" onClick={() => big.current.showModal()} aria-label="Foto groot bekijken" className="block size-full cursor-zoom-in">
+        <img ref={img} src={p.url} alt="" loading="lazy" decoding="async" onLoad={() => setLoaded(true)}
+             className={`develop size-full object-cover ${seen && loaded ? 'in' : ''}`} />
+      </button>
+      {/* Native modal: top layer (no clipping), Esc closes it; a tap anywhere does too. */}
+      <dialog ref={big} onClick={() => big.current.close()} aria-label="Foto"
+              className="m-0 size-full max-h-none max-w-none cursor-zoom-out bg-transparent p-0 backdrop:bg-black/90">
+        <img src={p.url} alt="" loading="lazy" className="size-full object-contain" />
+      </dialog>
     </div>
   )
 }
