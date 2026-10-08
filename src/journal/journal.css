@@ -26,3 +26,7 @@ details > summary::-webkit-details-marker { display: none; }
   .pin, .pin.newest::after { animation: none; }
   .develop { opacity: 1; filter: none; transition: none; }
 }
+
+/* Light deterrent against saving photos (a screenshot always works): no long-press menu, no dragging.
+   Right-click is blocked in main.jsx. */
+.photos img, .pswp img { -webkit-touch-callout: none; -webkit-user-drag: none; user-select: none; }

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BOOKINGS } from '../lib/bookings'
 import RouteMap from './RouteMap'
+import PhotoSwipeLightbox from 'photoswipe/lightbox'
+import 'photoswipe/style.css'
 
 // The trip's cities in order, from the stays. Module-level so the map draws once.
 const ROUTE = BOOKINGS
@@ -80,7 +82,6 @@ function Photo({ p, fill }) {
   const img = useRef(null)
   const [seen, setSeen] = useState(false)
   const [loaded, setLoaded] = useState(false)
-  const big = useRef(null)
   useEffect(() => {
     if (img.current.complete && img.current.naturalWidth) setLoaded(true)   // cached: onLoad already fired
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setSeen(true); io.disconnect() } }, { threshold: 0.25 })
@@ -89,26 +90,42 @@ function Photo({ p, fill }) {
   }, [])
   return (
     <div ref={ref} className="overflow-hidden bg-rule" style={{ aspectRatio: fill ? '1' : `${p.w} / ${p.h}` }}>
-      <button type="button" onClick={() => big.current.showModal()} aria-label="Foto groot bekijken" className="block size-full cursor-zoom-in">
-        <img ref={img} src={p.url} alt="" loading="lazy" decoding="async" onLoad={() => setLoaded(true)}
+      {/* PhotoSwipe reads these; without JS the link still opens the photo. */}
+      <a href={p.url} data-pswp-width={p.w} data-pswp-height={p.h} data-cropped="true"
+         aria-label="Foto groot bekijken" className="block size-full cursor-zoom-in">
+        <img ref={img} src={p.url} alt="" loading="lazy" decoding="async" draggable="false" onLoad={() => setLoaded(true)}
              className={`develop size-full object-cover ${seen && loaded ? 'in' : ''}`} />
-      </button>
-      {/* Native modal: top layer (no clipping), Esc closes it; a tap anywhere does too. */}
-      <dialog ref={big} onClick={() => big.current.close()} aria-label="Foto"
-              className="m-0 size-full max-h-none max-w-none cursor-zoom-out bg-transparent p-0 backdrop:bg-black/90">
-        <img src={p.url} alt="" loading="lazy" className="size-full object-contain" />
-      </dialog>
+      </a>
     </div>
   )
 }
 
+/** Tap a photo: a swipeable gallery of that moment's photos, zooming out of the cropped thumbnail. */
+function useGallery(ref, any) {
+  useEffect(() => {
+    if (!ref.current) return
+    const lb = new PhotoSwipeLightbox({ gallery: ref.current, children: 'a', pswpModule: () => import('photoswipe'),
+      bgOpacity: 0.92, tapAction: 'close' })
+    // The phone's back button closes the gallery instead of leaving the day: a history entry
+    // of our own while it's open (same address, so the journal's router doesn't notice).
+    lb.on('beforeOpen', () => history.pushState({ pswp: true }, ''))
+    lb.on('close', () => { if (history.state?.pswp) history.back() })
+    const onPop = () => lb.pswp?.close()
+    addEventListener('popstate', onPop)
+    lb.init()
+    return () => { removeEventListener('popstate', onPop); lb.destroy() }
+  }, [ref, any])   // set up again once a moment gets its first photo
+}
+
 /** First photo large; the rest share one row beneath it. */
 function Photos({ photos }) {
+  const ref = useRef(null)
+  useGallery(ref, photos.length > 0)
   if (!photos.length) return null
   const [first, ...rest] = photos
   const portrait = first.h > first.w
   return (
-    <div className="-mx-6 grid gap-1 sm:mx-0">
+    <div ref={ref} className="photos -mx-6 grid gap-1 sm:mx-0">
       <div className={portrait ? 'sm:max-w-md' : ''}><Photo p={first} /></div>
       {rest.length > 0 && (
         <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${rest.length}, 1fr)` }}>
