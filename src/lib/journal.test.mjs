@@ -2,6 +2,7 @@
 // What a posted moment may contain (functions/api/journal/moments).
 import assert from 'node:assert/strict'
 import { validate } from '../../functions/api/journal/moments/index.js'
+import { onRequestPut } from '../../functions/api/journal/moments/[id].js'
 
 const key = '0b4baa1f-49d3-48f2-9ad7-72b11df74f6b.jpg'
 const ok = { day: '2026-10-15', time: '07:50', text: ' Fushimi Inari ', place: { name: 'Kyoto', lat: 34.97, lon: 135.77 }, photos: [{ key, w: 1600, h: 1067 }] }
@@ -23,5 +24,23 @@ const bad = {
   'photo without size': { ...ok, photos: [{ key }] },
 }
 for (const [why, body] of Object.entries(bad)) assert.ok(validate(body).error, why)
+
+// Editing: photos dropped from the list leave the bucket, kept ones stay.
+const key2 = '1c5cbb2f-49d3-48f2-9ad7-72b11df74f6b.jpg'
+const deleted = [], saved = []
+const env = {
+  DB: { prepare: sql => ({ bind: (...a) => ({
+    first: async () => JSON.stringify([{ key, w: 1, h: 1 }, { key: key2, w: 1, h: 1 }]),
+    run: async () => saved.push(a),
+  }) }) },
+  PHOTOS: { delete: async keys => deleted.push(...keys) },
+}
+const put = (body, owner = true) => onRequestPut({ params: { id: 'm1' }, env,
+  request: new Request('http://x', { method: 'PUT', body: JSON.stringify(body), headers: owner ? { 'X-Trip-Email': 'a@b' } : {} }) })
+assert.equal((await put(ok)).status, 200)
+assert.deepEqual(deleted, [key2], 'only the removed photo is deleted')
+assert.equal(saved.length, 1)
+assert.equal((await put(ok, false)).status, 403, 'readers cannot edit')
+assert.equal((await put({ ...ok, day: 'x' })).status, 400)
 
 console.log('journal ok')

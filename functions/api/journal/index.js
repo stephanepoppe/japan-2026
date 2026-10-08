@@ -15,7 +15,7 @@ export async function onRequestGet({ request, env }) {
     moments: moments.map(m => ({
       id: m.id, day: m.day, time: m.time, text: m.text,
       place: { name: m.place_name ?? '', lat: m.lat, lon: m.lon },
-      photos: JSON.parse(m.photos).map(p => ({ url: photoUrl(p.key), w: p.w, h: p.h })),
+      photos: JSON.parse(m.photos).map(p => ({ key: p.key, url: photoUrl(p.key), w: p.w, h: p.h })),
       comments: comments.filter(c => c.moment_id === m.id).map(({ moment_id, ...c }) => c),
     })),
   })

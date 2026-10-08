@@ -180,7 +180,7 @@ function DeleteMoment({ id, reload }) {
     catch (err) { setError(err.message); setArmed(false) }
   }
   return (
-    <span className="ml-auto flex items-center gap-2">
+    <span className="flex items-center gap-2">
       {error && <span role="alert" className="text-red-700">{error}</span>}
       <button type="button" onClick={del} onBlur={() => setArmed(false)}
               className={armed ? 'font-medium text-red-700' : 'text-dim underline'}>
@@ -190,13 +190,14 @@ function DeleteMoment({ id, reload }) {
   )
 }
 
-function Moment({ m, owner, reload }) {
+function Moment({ m, owner, reload, go }) {
   return (
     <article className="mt-20 first:mt-14">
       <Photos photos={m.photos} />
       <div className="mt-5 max-w-[34rem]">
         <p className="flex flex-wrap gap-3 text-sm text-dim"><span className="tabular-nums">{m.time}</span><span>{m.place.name}</span>
-          {owner && <DeleteMoment id={m.id} reload={reload} />}</p>
+          {owner && <><Link to={`/journal/edit/${m.id}`} go={go} className="ml-auto text-dim underline">Bewerk</Link>
+            <DeleteMoment id={m.id} reload={reload} /></>}</p>
         {m.text && <p className="mt-2 font-mincho text-[1.1875rem] leading-[1.8] whitespace-pre-line">{m.text}</p>}
         <Comments moment={m} />
       </div>
@@ -218,7 +219,7 @@ function DayView({ entry, days, go, owner, reload }) {
           <h1 className="font-mincho text-6xl leading-none font-medium tracking-tight">Dag {dayNumber(entry.day)}</h1>
         </header>
 
-        {entry.moments.map(m => <Moment key={m.id} m={m} owner={owner} reload={reload} />)}
+        {entry.moments.map(m => <Moment key={m.id} m={m} owner={owner} reload={reload} go={go} />)}
 
         <nav className="mt-24 grid grid-cols-2 gap-3" aria-label="Andere dagen">
           {prev ? <Link to={`/journal/${prev.day}`} go={go} className={`${BTN} h-auto justify-start py-3 text-left`}>
@@ -276,20 +277,24 @@ async function shrink(file, max = 2048) {
   return { blob, w, h }
 }
 
-function NewMoment({ posted }) {
-  const start = tokyo()
+/** New moment, or editing one (`moment`): its photos stay unless removed, new ones are added. */
+function MomentForm({ moment, posted }) {
+  const start = moment ?? tokyo()
   const [day, setDay] = useState(start.day)
   const [time, setTime] = useState(start.time)
-  const [text, setText] = useState('')
+  const [text, setText] = useState(moment?.text ?? '')
+  const [kept, setKept] = useState(moment?.photos ?? [])
   const [files, setFiles] = useState([])
-  const [place, setPlace] = useState('')
-  const [pos, setPos] = useState({ state: 'zoeken' })
+  const [place, setPlace] = useState(moment?.place.name ?? '')
+  const [pos, setPos] = useState(!moment ? { state: 'zoeken' }
+    : moment.place.lat != null ? { state: 'bewaard', lat: moment.place.lat, lon: moment.place.lon } : { state: 'uit' })
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
 
   // Where we are now is the pin; a moment posted later can drop it.
   // ponytail: no reverse geocoding or reading GPS from the photo; the place name is typed.
   useEffect(() => {
+    if (moment) return                     // editing keeps the pin where it was
     if (!navigator.geolocation) return setPos({ state: 'geen' })
     navigator.geolocation.getCurrentPosition(
       p => setPos({ state: 'ok', lat: +p.coords.latitude.toFixed(5), lon: +p.coords.longitude.toFixed(5) }),
@@ -303,24 +308,24 @@ function NewMoment({ posted }) {
   const submit = async e => {
     e.preventDefault()
     if (status) return
-    if (!text.trim() && !files.length) return setError('Voeg een foto of wat tekst toe.')
+    if (!text.trim() && !files.length && !kept.length) return setError('Voeg een foto of wat tekst toe.')
     setError('')
     try {
-      const photos = []
+      const photos = kept.map(({ key, w, h }) => ({ key, w, h }))
       for (const [i, file] of files.entries()) {
         setStatus(`Foto ${i + 1} van ${files.length} uploaden…`)
         const { blob, w, h } = await shrink(file)
         const { key } = await api('/api/journal/photos', { method: 'POST', headers: { 'content-type': 'image/jpeg' }, body: blob })
         photos.push({ key, w, h })
       }
-      setStatus('Moment plaatsen…')
-      const keep = pos.state === 'ok'
-      await api('/api/journal/moments', { method: 'POST', headers: { 'content-type': 'application/json' },
+      setStatus(moment ? 'Opslaan…' : 'Moment plaatsen…')
+      const keep = pos.state === 'ok' || pos.state === 'bewaard'
+      await api(moment ? `/api/journal/moments/${moment.id}` : '/api/journal/moments', { method: moment ? 'PUT' : 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ day, time, text, photos,
           place: { name: place, lat: keep ? pos.lat : null, lon: keep ? pos.lon : null } }) })
       await posted(day)
     } catch (err) {
-      setError(`Niet geplaatst: ${err.message}. Je tekst en foto's staan er nog, probeer opnieuw.`)
+      setError(`${moment ? 'Niet opgeslagen' : 'Niet geplaatst'}: ${err.message}. Je tekst en foto's staan er nog, probeer opnieuw.`)
       setStatus('')
     }
   }
@@ -329,19 +334,26 @@ function NewMoment({ posted }) {
   const label = 'grid gap-1.5 text-sm font-medium'
   return (
     <main className="mx-auto max-w-2xl px-6 pb-24">
-      <h1 className="mt-10 font-mincho text-4xl font-medium">Nieuw moment</h1>
+      <h1 className="mt-10 font-mincho text-4xl font-medium">{moment ? 'Moment bewerken' : 'Nieuw moment'}</h1>
       <form className="mt-8 grid gap-6" onSubmit={submit}>
         <label className={label}>Foto's
           <input type="file" accept="image/*" multiple className={field}
-                 onChange={e => setFiles([...files, ...e.target.files].slice(0, 12))} />
+                 onChange={e => { setFiles([...files, ...e.target.files].slice(0, 12 - kept.length)); e.target.value = '' }} />
         </label>
-        {files.length > 0 && (
+        {kept.length + files.length > 0 && (
           <ul className="grid grid-cols-4 gap-1" aria-label="Gekozen foto's">
+            {kept.map((p, i) => (
+              <li key={p.key} className="relative">
+                <img src={p.url} alt="" className="aspect-square w-full object-cover" />
+                <button type="button" onClick={() => setKept(kept.filter((_, j) => j !== i))}
+                        className="absolute top-1 right-1 rounded-md bg-paper/90 px-2 py-1 text-xs font-medium" aria-label={`Foto ${i + 1} weghalen`}>✕</button>
+              </li>
+            ))}
             {previews.map((src, i) => (
               <li key={src} className="relative">
                 <img src={src} alt="" className="aspect-square w-full object-cover" />
                 <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                        className="absolute top-1 right-1 rounded-md bg-paper/90 px-2 py-1 text-xs font-medium" aria-label={`Foto ${i + 1} weghalen`}>✕</button>
+                        className="absolute top-1 right-1 rounded-md bg-paper/90 px-2 py-1 text-xs font-medium" aria-label={`Foto ${kept.length + i + 1} weghalen`}>✕</button>
               </li>
             ))}
           </ul>
@@ -354,6 +366,7 @@ function NewMoment({ posted }) {
           <span className="font-normal text-dim">
             {pos.state === 'zoeken' && 'Locatie zoeken voor de pin op de kaart…'}
             {pos.state === 'ok' && <>Pin op je huidige locatie. <button type="button" className="text-ai underline" onClick={() => setPos({ state: 'uit' })}>Geen pin</button></>}
+            {pos.state === 'bewaard' && <>De pin blijft waar hij stond. <button type="button" className="text-ai underline" onClick={() => setPos({ state: 'uit' })}>Geen pin</button></>}
             {pos.state === 'uit' && 'Geen pin op de kaart.'}
             {pos.state === 'geen' && 'Geen locatie gevonden, dus geen pin op de kaart.'}
           </span>
@@ -364,7 +377,7 @@ function NewMoment({ posted }) {
         </div>
         {error && <p role="alert" className="text-red-700">{error}</p>}
         <button disabled={!!status} className="inline-flex min-h-12 items-center justify-center rounded-md bg-ai px-5 font-medium text-on-ai disabled:opacity-60">
-          {status || 'Deel moment'}
+          {status || (moment ? 'Opslaan' : 'Deel moment')}
         </button>
       </form>
     </main>
@@ -380,6 +393,7 @@ export default function Journal() {
   const days = byDay(data?.moments ?? [])
   const isRoute = path.startsWith('/journal/route')
   const isNew = path.startsWith('/journal/new') && data?.owner
+  const editing = data?.owner && data.moments.find(m => path === `/journal/edit/${m.id}`)
   const asked = path.match(/\/journal\/(\d{4}-\d{2}-\d{2})/)?.[1]
   const entry = days.find(d => d.day === asked) ?? days.at(-1)
   const posted = day => load().then(() => go(`/journal/${day}`))
@@ -387,7 +401,8 @@ export default function Journal() {
   let view
   if (!data) view = <p className="px-6 py-20 text-dim">Laden…</p>
   else if (data.error) view = <p className="px-6 py-20 font-mincho text-xl">Het dagboek kon niet laden. Probeer het straks opnieuw.</p>
-  else if (isNew) view = <NewMoment posted={posted} />
+  else if (isNew) view = <MomentForm posted={posted} />
+  else if (editing) view = <MomentForm key={editing.id} moment={editing} posted={posted} />
   else if (isRoute) view = <RouteView days={days} go={go} />
   else if (entry) view = <DayView key="day" entry={entry} days={days} go={go} owner={data.owner} reload={load} />
   else view = <p className="px-6 py-20 font-mincho text-xl">Nog niets gedeeld. Kom straks terug.</p>
@@ -397,8 +412,8 @@ export default function Journal() {
       <div className="fixed inset-x-0 top-0 z-[1000] flex items-center justify-between border-b border-rule bg-paper/90 px-6 py-2 text-sm backdrop-blur-md">
         <Link to="/journal" go={go} className="font-mincho text-base">Japan Steps</Link>
         <span className="flex gap-2">
-          {data?.owner && !isNew && <Link to="/journal/new" go={go} className={BTN_SMALL}>+ Moment</Link>}
-          {isRoute || isNew
+          {data?.owner && !isNew && !editing && <Link to="/journal/new" go={go} className={BTN_SMALL}>+ Moment</Link>}
+          {isRoute || isNew || editing
             ? <Link to="/journal" go={go} className={BTN_SMALL}><Chevron dir="left" />Naar laatste dag</Link>
             : <Link to="/journal/route" go={go} className={BTN_SMALL}>Hele route</Link>}
         </span>
