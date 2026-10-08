@@ -49,7 +49,7 @@ export default function App() {
         {<current.View />}
       </main>
       <nav className="fixed inset-x-0 bottom-0 border-t border-rule bg-paper/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
-        <div className="mx-auto grid max-w-xl grid-cols-5 px-2">
+        <div className="mx-auto grid max-w-xl grid-cols-6 px-2">
           {TABS.map(t => {
             const on = t.id === current.id
             return (
@@ -60,6 +60,8 @@ export default function App() {
               </a>
             )
           })}
+          {/* A separate page, not a tab: owners post moments there, readers only ever see that. */}
+          <a href="/journal" className="py-4 text-center text-[0.8125rem] text-dim no-underline">Journal</a>
         </div>
       </nav>
     </>
