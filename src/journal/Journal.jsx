@@ -278,7 +278,7 @@ async function shrink(file, max = 2048) {
 }
 
 /** New moment, or editing one (`moment`): its photos stay unless removed, new ones are added. */
-function MomentForm({ moment, posted }) {
+function MomentForm({ moment, posted, go }) {
   const start = moment ?? tokyo()
   const [day, setDay] = useState(start.day)
   const [time, setTime] = useState(start.time)
@@ -376,9 +376,12 @@ function MomentForm({ moment, posted }) {
           <label className={label}>Uur (Japan)<input type="time" className={field} value={time} onChange={e => setTime(e.target.value)} required /></label>
         </div>
         {error && <p role="alert" className="text-red-700">{error}</p>}
-        <button disabled={!!status} className="inline-flex min-h-12 items-center justify-center rounded-md bg-ai px-5 font-medium text-on-ai disabled:opacity-60">
-          {status || (moment ? 'Opslaan' : 'Deel moment')}
-        </button>
+        <div className="grid gap-3">
+          <button disabled={!!status} className="inline-flex min-h-12 items-center justify-center rounded-md bg-ai px-5 font-medium text-on-ai disabled:opacity-60">
+            {status || (moment ? 'Opslaan' : 'Deel moment')}
+          </button>
+          {moment && <Link to={`/journal/${moment.day}`} go={go} className={BTN}>Annuleer</Link>}
+        </div>
       </form>
     </main>
   )
@@ -402,7 +405,7 @@ export default function Journal() {
   if (!data) view = <p className="px-6 py-20 text-dim">Laden…</p>
   else if (data.error) view = <p className="px-6 py-20 font-mincho text-xl">Het dagboek kon niet laden. Probeer het straks opnieuw.</p>
   else if (isNew) view = <MomentForm posted={posted} />
-  else if (editing) view = <MomentForm key={editing.id} moment={editing} posted={posted} />
+  else if (editing) view = <MomentForm key={editing.id} moment={editing} posted={posted} go={go} />
   else if (isRoute) view = <RouteView days={days} go={go} />
   else if (entry) view = <DayView key="day" entry={entry} days={days} go={go} owner={data.owner} reload={load} />
   else view = <p className="px-6 py-20 font-mincho text-xl">Nog niets gedeeld. Kom straks terug.</p>
