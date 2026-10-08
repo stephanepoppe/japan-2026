@@ -4,7 +4,7 @@ import RouteMap from './RouteMap'
 
 // The trip's cities in order, from the stays. Module-level so the map draws once.
 const ROUTE = BOOKINGS
-  .filter(b => b.kind === 'stay' && b.lat != null)
+  .filter(b => b.kind === 'stay' && b.lat != null && b.start)
   .map(b => ({ city: b.city.replace(/, Japan$/, ''), lat: b.lat, lon: b.lon, from: b.start.slice(0, 10) }))
 const FIRST = ROUTE[0]?.from
 
