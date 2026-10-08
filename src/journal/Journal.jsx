@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BOOKINGS } from '../lib/bookings'
 import RouteMap from './RouteMap'
 
@@ -288,8 +288,9 @@ function NewMoment({ posted }) {
       () => setPos({ state: 'geen' }), { enableHighAccuracy: true, timeout: 15000 })
   }, [])
 
-  const previews = files.map(f => URL.createObjectURL(f))
-  useEffect(() => () => previews.forEach(URL.revokeObjectURL), [files])   // eslint-disable-line react-hooks/exhaustive-deps
+  // Once per photo pick, not per render: a new URL per keystroke re-decodes every full-size photo.
+  const previews = useMemo(() => files.map(f => URL.createObjectURL(f)), [files])
+  useEffect(() => () => previews.forEach(URL.revokeObjectURL), [previews])
 
   const submit = async e => {
     e.preventDefault()
