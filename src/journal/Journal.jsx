@@ -386,7 +386,7 @@ export default function Journal() {
   return (
     <>
       <div className="fixed inset-x-0 top-0 z-[1000] flex items-center justify-between border-b border-rule bg-paper/90 px-6 py-2 text-sm backdrop-blur-md">
-        <Link to="/journal" go={go} className="font-mincho text-base">Ons Japan-dagboek</Link>
+        <Link to="/journal" go={go} className="font-mincho text-base">Japan Steps</Link>
         <span className="flex gap-2">
           {data?.owner && !isNew && <Link to="/journal/new" go={go} className={BTN_SMALL}>+ Moment</Link>}
           {isRoute || isNew
