@@ -192,7 +192,7 @@
     },
     {
       "kind": "transport",
-      "name": "Shinkansen KODAMA 817 / HIKARI 709 (Odawara → Mishima → Kyoto)",
+      "name": "Shinkansen Odawara to Kyoto via Mishima",
       "start": "2026-10-13T11:05",
       "end": "2026-10-13T13:37",
       "confirmation": "2005",
@@ -203,10 +203,10 @@
       "address": null,
       "origin": "Odawara",
       "destination": "Kyoto",
-      "flight_number": "KODAMA 817, HIKARI 709",
-      "notes": "Leg 1: Odawara (11:05) → Mishima (11:20), KODAMA 817, N700 series 16 cars, Ordinary, Car 11 Seats 8-D and 8-E. Leg 2: Mishima (11:46) → Kyoto (13:37), HIKARI 709, N700 series 16 cars, Ordinary, Car 6 Seats 6-A and 6-B. Adults: 2. Booked via smart EX. Fare valid only on Shinkansen, not conventional lines.\n\nTrain numbers and seats finalized; times may have changed.\n\nhttps://smart-ex.jp/en/",
-      "source_id": "<9580c3a1-7d3a-481b-8965-6d1d71ed38d8@srs3638.expy.jp>",
-      "source_subject": "[Shinkansen Reservation Service] Trains/seats fainalized"
+      "flight_number": "KODAMA 817 / HIKARI 709",
+      "notes": "Leg 1: Odawara 11:05 -> Mishima 11:20, KODAMA 817, N700 series 16 cars, Ordinary, Car 11 Seats 8-D and 8-E. Leg 2: Mishima 11:46 -> Kyoto 13:37, HIKARI 709, N700 series 16 cars, Ordinary, Car 6 Seats 6-A and 6-B. Board with IC card or QR-Ticket.",
+      "source_id": "<266fc404-3a92-4725-98df-21c44349c9ae@srs3638.expy.jp>",
+      "source_subject": "[Shinkansen Reservation Service] Reservation for Tomorrow (Boarding Date of Oct 13, 2026)"
     },
     {
       "kind": "stay",
@@ -252,6 +252,28 @@
       "postcode": "541-0057"
     },
     {
+      "kind": "stay",
+      "name": "B HOTEL ARTS DOBASHI, Family Apartment 5N",
+      "start": "2026-10-20",
+      "end": "2026-10-22",
+      "confirmation": "HMPNCJ2892",
+      "pin": null,
+      "cost": "€162.92",
+      "url": "https://www.airbnb.be/trips/v1/reservation-details/ro/RESERVATION2_CHECKIN/HMPNCJ2892",
+      "city": "Naka Ward, Hiroshima",
+      "address": "730-0854, Hiroshima, Naka Ward, 2-29 Dohashichō, Japan",
+      "origin": null,
+      "destination": null,
+      "flight_number": null,
+      "notes": "Check-in after 15:00, check-out before 11:00. Entire home/apartment hosted by アーツ土橋 (+81 80-8920-6414). Self check-in with smart lock. 2 adults. Quiet hours 22:00-08:00, no pets, max 6 guests. No smoke or CO detector reported.",
+      "source_id": "<ZbQjFbziRTKHweJegEvfJA@geopod-ismtpd-14>",
+      "source_subject": "Boekingsherinnering - 20 oktober 2026",
+      "lat": 34.4,
+      "lon": 132.45,
+      "address_ja": "広島県広島市中区土橋町2-29",
+      "postcode": "730-0854"
+    },
+    {
       "kind": "transport",
       "name": "NOZOMI 117 Shin-Osaka to Hiroshima",
       "start": "2026-10-20T09:29",
@@ -268,28 +290,6 @@
       "notes": "Reservation changed. Series N700, 16 cars, Ordinary class. Car 3, Seats 17-D and 17-E, 2 adults (previously Car 4, Seats 5-A and 5-B). Seats with oversized baggage area; baggage must be stored behind the seat. Fare valid only on Shinkansen, not conventional lines. Boarding by IC card or QR-Ticket. Receipt balance 0 Yen.",
       "source_id": "<d7e5d6f3-aaa1-4ab7-bea7-a0c5cfc95322@srs3638.expy.jp>",
       "source_subject": "[Shinkansen Reservation Service] Reservation Change Details"
-    },
-    {
-      "kind": "stay",
-      "name": "b hotel アーツ土橋 / Arts dobashi — Family Apartment 5N",
-      "start": "2026-10-20T15:00",
-      "end": "2026-10-22T11:00",
-      "confirmation": "HMPNCJ2892",
-      "pin": null,
-      "cost": "€162.92",
-      "url": "https://www.airbnb.be/rooms/919909175101819290",
-      "city": "Hiroshima",
-      "address": "730-0854, Hiroshima, Naka Ward, 2-29 Dohashichō, Japan",
-      "origin": null,
-      "destination": null,
-      "flight_number": null,
-      "notes": "Host: アーツ土橋 (Airbnb). 2 adults. Unmanned hotel with no front desk; online pre-check-in (guest registration) required by the day before arrival via https://guest-app.guesty.com/s/LmpEXWZzbgi. Entry code and room details emailed automatically at 9:00 am on check-in day. Check-in from 15:00, check-out until 11:00.",
-      "source_id": "<mv0BcUL4TA27IqEgKUqJ3w@geopod-ismtpd-52>",
-      "source_subject": "RE: Boeking voor b hotel アーツ土橋、ファミリーアパートメント 5n, 20–22 okt",
-      "lat": 34.4,
-      "lon": 132.45,
-      "address_ja": "広島県広島市中区土橋町2-29",
-      "postcode": "730-0854"
     },
     {
       "kind": "transport",
