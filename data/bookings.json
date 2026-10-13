@@ -204,9 +204,9 @@
       "origin": "Odawara",
       "destination": "Kyoto",
       "flight_number": "KODAMA 817 / HIKARI 709",
-      "notes": "Leg 1: Odawara 11:05 -> Mishima 11:20, KODAMA 817, N700 series 16 cars, Ordinary, Car 11 Seats 8-D and 8-E. Leg 2: Mishima 11:46 -> Kyoto 13:37, HIKARI 709, N700 series 16 cars, Ordinary, Car 6 Seats 6-A and 6-B. Board with IC card or QR-Ticket.",
-      "source_id": "<266fc404-3a92-4725-98df-21c44349c9ae@srs3638.expy.jp>",
-      "source_subject": "[Shinkansen Reservation Service] Reservation for Tomorrow (Boarding Date of Oct 13, 2026)"
+      "notes": "Leg 1: Odawara 11:05 -> Mishima 11:20, KODAMA 817, N700 series 16 cars, Ordinary, Car 11 Seats 8-D and 8-E. Leg 2: Mishima 11:46 -> Kyoto 13:37, HIKARI 709, N700 series 16 cars, Ordinary, Car 6 Seats 6-A and 6-B. Boarding by IC card or QR-Ticket.pin:null,cost:null,url:https://smart-ex.jp/en/",
+      "source_id": "<c6cf1692-3735-4a72-86b9-9c4c449794f8@srs9331.expy.jp>",
+      "source_subject": "[Shinkansen Reservation Service] Reservation for Boarding Date of Oct 13, 2026"
     },
     {
       "kind": "stay",
@@ -328,6 +328,24 @@
       "source_subject": "Welkom in Sumida City, Stéphane.",
       "lat": 35.73289,
       "lon": 139.82085
+    },
+    {
+      "kind": "stay",
+      "name": "Airbnb stay in 京都市中京区梅忠町",
+      "start": null,
+      "end": null,
+      "confirmation": null,
+      "pin": null,
+      "cost": null,
+      "url": "https://www.airbnb.be/messaging/thread/2664733169?thread_type=home_booking",
+      "city": "京都市中京区梅忠町",
+      "address": null,
+      "origin": null,
+      "destination": null,
+      "flight_number": null,
+      "notes": "Host: Be-My-Guest Services, first point of contact during the stay; welcome message on arrival",
+      "source_id": "<q3DR7XMnTxmay5ejO5vY5Q@geopod-ismtpd-64>",
+      "source_subject": "Welkom in 京都市中京区梅忠町, Stéphane."
     },
     {
       "kind": "transport",
