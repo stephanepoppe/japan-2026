@@ -222,9 +222,9 @@
       "origin": null,
       "destination": null,
       "flight_number": null,
-      "notes": "Check-in 2:00 PM (last check-in 5:30 PM), estimated check-in 14:00; check-out 10:00 AM. 1 room, General Japanese-style room (8-12 tatami), Regular shukubo plan with free Ajikan meditation and sutra copying. 2 adults. Discount 2,000 JPY. Paid by credit card; statement shows TABICHAT ENGINE. Guest: Poppe Stephane. Phone +81-736-56-2514. Nearest bus stop Karukayado-mae (stop 9), bus toward Okunoin. Night tour not included, separate reservation required.",
-      "source_id": "<010101a096e4f123-bde3c755-f9c8-42cc-8104-985befb20713-000000@us-west-2.amazonses.com>",
-      "source_subject": "Booking completed: Ekoin Temple (af0ab78d8cf69775883d)",
+      "notes": "Check-in 2:00 PM (last check-in 5:30 PM), check-out 10:00 AM; estimated check-in 14:00. 1 room, general Japanese-style room (8-12 tatami), regular shukubo plan with free Ajikan meditation and sutra copying. 2 adults (1 male, 1 female). Guest: Poppe Stephane. Discount 2,000 JPY; paid by credit card. Phone +81-736-56-2514. Nearest bus stop: Karukayado-mae (stop 9) on the Okunoin-bound bus from Koyasan Station. Okunoin Night Tour not included; book separately at night.koyasan-okunoin.com.",
+      "source_id": "<010101a138614881-7aecaf46-3025-4aec-86d1-9ea652a02b3f-000000@us-west-2.amazonses.com>",
+      "source_subject": "[Booking reminder] 3 days until check-in: Ekoin Temple (af0ab78d8cf69775883d)",
       "lat": 34.21667,
       "lon": 135.58333,
       "address_ja": "和歌山県伊都郡高野町高野山497"
