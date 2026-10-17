@@ -230,6 +230,24 @@
       "address_ja": "和歌山県伊都郡高野町高野山497"
     },
     {
+      "kind": "transport",
+      "name": "Koyasan World Heritage Digital Ticket (basic fare ticket only) — NANKAI DIGITAL TICKET",
+      "start": "2026-10-17 03:00",
+      "end": "2026-10-19 02:59",
+      "confirmation": "S800-591-090-00, S800-591-090-01",
+      "pin": null,
+      "cost": "7,960 JPY",
+      "url": "https://www.faq.nankai.co.jp",
+      "city": null,
+      "address": null,
+      "origin": null,
+      "destination": "Koyasan",
+      "flight_number": null,
+      "notes": "Purchased 2026-10-03 00:38. Two adult tickets. Notice of initial ticket use; this email is not the ticket itself but staff may check it as proof of initial use.",
+      "source_id": "<011901a14724b292-629b2614-687f-4085-bd72-be46a35dd99b-000000@ap-northeast-3.amazonses.com>",
+      "source_subject": "[NANKAI DIGITAL TICKET] Notice of Initial Ticket Use"
+    },
+    {
       "kind": "stay",
       "name": "Miyako City Osaka Hommachi",
       "start": "2026-10-18",
@@ -272,6 +290,24 @@
       "lon": 132.45,
       "address_ja": "広島県広島市中区土橋町2-29",
       "postcode": "730-0854"
+    },
+    {
+      "kind": "stay",
+      "name": "b hotel アーツ土橋、ファミリーアパートメント 5N",
+      "start": "2026-10-20",
+      "end": "2026-10-22",
+      "confirmation": null,
+      "pin": null,
+      "cost": null,
+      "url": "https://www.airbnb.be/rooms/919909175101819290",
+      "city": null,
+      "address": null,
+      "origin": null,
+      "destination": null,
+      "flight_number": null,
+      "notes": "Entire home/apartment hosted by アーツ土橋; 2 adults. Check-in from 15:00, check-out 11:00. Luggage drop-off from 11:30; room not available before 15:00 due to cleaning. Unstaffed property: online pre-check-in (guest registration) required by Japanese law, complete by the day before arrival; entry code and room details sent by message at 09:00 on check-in day. Hotel info: https://www.bhotel-info.com/pages/arts_eng/index.html",
+      "source_id": "<yYzqgIRkQRWVS8Y2IuF5oQ@geopod-ismtpd-50>",
+      "source_subject": "RE: Boeking voor b hotel アーツ土橋、ファミリーアパートメント 5n, 20–22 okt"
     },
     {
       "kind": "transport",
@@ -346,24 +382,6 @@
       "notes": "Host: Be-My-Guest Services, first point of contact during the stay; welcome message on arrival",
       "source_id": "<q3DR7XMnTxmay5ejO5vY5Q@geopod-ismtpd-64>",
       "source_subject": "Welkom in 京都市中京区梅忠町, Stéphane."
-    },
-    {
-      "kind": "transport",
-      "name": "Koyasan World Heritage Digital Ticket (basic fare ticket only) — NANKAI DIGITAL TICKET",
-      "start": null,
-      "end": null,
-      "confirmation": "S800-591-090-00, S800-591-090-01",
-      "pin": null,
-      "cost": "7,960 JPY",
-      "url": "https://nk-digital-ticket.nankai.co.jp/",
-      "city": null,
-      "address": null,
-      "origin": null,
-      "destination": "Koyasan",
-      "flight_number": null,
-      "notes": "Purchased 2026-10-03 00:38. 2 adult tickets. Must begin use by 2026-10-19 02:59; valid for 2 days after first use. Electronic ticket shown via web browser; keep this email as proof of purchase.",
-      "source_id": "<011901a0fd4499a7-7ff845a5-7711-4192-ba99-4315c0f5e394-000000@ap-northeast-3.amazonses.com>",
-      "source_subject": "[NANKAI DIGITAL TICKET] Notice of Completed Purchase"
     }
   ]
 }
