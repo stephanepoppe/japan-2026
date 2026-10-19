@@ -311,9 +311,9 @@
     },
     {
       "kind": "transport",
-      "name": "NOZOMI 117 Shin-Osaka to Hiroshima",
-      "start": "2026-10-20T09:29",
-      "end": "2026-10-20T10:55",
+      "name": "NOZOMI 21 Shin-Osaka to Hiroshima",
+      "start": "2026-10-20T12:02",
+      "end": "2026-10-20T13:27",
       "confirmation": "2007",
       "pin": null,
       "cost": "21,500 Yen",
@@ -322,10 +322,10 @@
       "address": null,
       "origin": "Shin-Osaka",
       "destination": "Hiroshima",
-      "flight_number": "NOZOMI 117",
-      "notes": "Reservation changed. Series N700, 16 cars, Ordinary class. Car 3, Seats 17-D and 17-E, 2 adults (previously Car 4, Seats 5-A and 5-B). Seats with oversized baggage area; baggage must be stored behind the seat. Fare valid only on Shinkansen, not conventional lines. Boarding by IC card or QR-Ticket. Receipt balance 0 Yen.",
-      "source_id": "<d7e5d6f3-aaa1-4ab7-bea7-a0c5cfc95322@srs3638.expy.jp>",
-      "source_subject": "[Shinkansen Reservation Service] Reservation Change Details"
+      "flight_number": "NOZOMI 21",
+      "notes": "Series N700 with 16 cars, Ordinary class, Car 5 Seats 7-D and 7-E. Boarding with IC card or QR-Ticket.",
+      "source_id": "<3654612f-ccbe-42f4-b996-34ed3a455222@srs3638.expy.jp>",
+      "source_subject": "[Shinkansen Reservation Service] Reservation for Tomorrow (Boarding Date of Oct 20, 2026)"
     },
     {
       "kind": "transport",
