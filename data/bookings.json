@@ -404,6 +404,24 @@
       "source_subject": "[ teamLab Borderless ] Ticket purchase completed"
     },
     {
+      "kind": "transport",
+      "name": "Keisei Skyliner one-way (Keisei Ueno → Narita Airport Terminal 1)",
+      "start": "2026-10-23",
+      "end": null,
+      "confirmation": "91-490577181",
+      "pin": "7498",
+      "cost": "¥4620",
+      "url": "https://skyliner.ec.keisei.co.jp/ecp/U_WB_10_10.action?lk=en&gc=keisei",
+      "city": null,
+      "address": null,
+      "origin": "Keisei Ueno",
+      "destination": "Narita Airport Terminal 1",
+      "flight_number": null,
+      "notes": "Skyliner one-way; 2 adults, 0 children. Ticket valid until 2026-11-21. Present QR code or purchase details at redemption location, or use Face Check in Go (facial recognition) to skip exchange. Representative: Stephane Poppe (born 1990-01-17, Belgium).",
+      "source_id": "<263543849.13327.1792680509033.JavaMail.root@KSSRHSVRWAP1>",
+      "source_subject": "Purchase Completed 購入完了"
+    },
+    {
       "kind": "stay",
       "name": "Airbnb stay hosted by Takeyuki",
       "start": null,
